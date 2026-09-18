@@ -17,6 +17,19 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+    if args.iter().any(|a| a == "--version" || a == "-V") {
+        println!("sonora-tui {}", env!("CARGO_PKG_VERSION"));
+        return Ok(());
+    }
+    if args.iter().any(|a| a == "--help" || a == "-h") {
+        println!(
+            "sonora-tui {}\nSonora Terminal Audio Player (TUI)\n\nUSAGE:\n    sonora-tui [OPTIONS]\n\nOPTIONS:\n    -h, --help       Print help information\n    -V, --version    Print version information",
+            env!("CARGO_PKG_VERSION")
+        );
+        return Ok(());
+    }
+
     // TUI logging disabled to terminal to avoid screen disruption
     init_logging(&LogConfig {
         enable_ansi: false,

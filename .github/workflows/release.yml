@@ -1,0 +1,378 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag name (e.g. v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  test:
+    name: Quality Gate & Test Suite
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install system dependencies (ALSA & WebKitGTK)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libsoup-3.0-dev
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build TypeScript frontend
+        run: |
+          npm --prefix apps/desktop install
+          npm --prefix apps/desktop run build
+
+      - name: Frontend tests
+        run: npm --prefix apps/desktop test
+
+      - name: Rust fmt check
+        run: cargo fmt --all -- --check
+
+      - name: Cargo clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build first-party plugin artifacts
+        run: |
+          ./plugins/spectrum-plus/build.sh
+          ./plugins/lyrics-genius/build.sh
+
+      - name: Rebuild deterministic registry
+        run: |
+          python3 community-registry/tools/build.py
+          git diff --exit-code -- community-registry/v1 community-registry/packages || (echo "registry artifacts not reproducible; rerun tools/build.py and commit" && exit 1)
+
+      - name: Cargo check workspace
+        run: cargo check --workspace --all-targets
+
+      - name: Cargo test workspace
+        run: cargo test --workspace --verbose
+
+  build-linux:
+    name: Build Linux Packages (x86_64)
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.tag_name || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libasound2-dev \
+            libwebkit2gtk-4.1-dev \
+            libjavascriptcoregtk-4.1-dev \
+            libsoup-3.0-dev \
+            squashfs-tools
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build desktop frontend
+        run: |
+          npm --prefix apps/desktop install
+          npm --prefix apps/desktop run build
+
+      - name: Build Tauri Desktop Packages (AppImage & DEB)
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+          NO_STRIP: 1
+        run: |
+          npm --prefix apps/desktop run tauri:build -- --bundles appimage,deb
+
+      - name: Build Terminal Binaries (CLI & TUI)
+        run: |
+          cargo build --release --bin sonora --bin sonora-tui
+
+      - name: Sanity check Linux binaries
+        run: |
+          ./target/release/sonora --version
+          ./target/release/sonora status
+          ./target/release/sonora-tui --version
+
+      - name: Package Linux Artifacts
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p dist-linux
+
+          # Find and standardize desktop AppImage
+          APPIMAGE=$(find target/release/bundle/appimage -name "*.AppImage" -type f | head -1)
+          if [[ -f "$APPIMAGE" ]]; then
+            cp "$APPIMAGE" "dist-linux/Sonora-v${VERSION}-linux-x86_64.AppImage"
+          else
+            echo "Error: AppImage not found" && exit 1
+          fi
+
+          # Find and standardize desktop DEB
+          DEB=$(find target/release/bundle/deb -name "*.deb" -type f | head -1)
+          if [[ -f "$DEB" ]]; then
+            cp "$DEB" "dist-linux/Sonora-v${VERSION}-linux-x86_64.deb"
+          else
+            echo "Error: DEB package not found" && exit 1
+          fi
+
+          # Package terminal bundle
+          ./scripts/package-terminal.sh linux x86_64 target/release dist-linux "$VERSION"
+
+          ls -lh dist-linux/
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-artifacts
+          path: dist-linux/*
+          if-no-files-found: error
+
+  build-windows:
+    name: Build Windows Packages (x86_64)
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        shell: bash
+        run: |
+          VERSION="${{ github.event.inputs.tag_name || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build desktop frontend
+        run: |
+          npm --prefix apps/desktop install
+          npm --prefix apps/desktop run build
+
+      - name: Build Tauri Desktop Packages (MSI & NSIS EXE)
+        run: |
+          npm --prefix apps/desktop run tauri:build -- --bundles msi,nsis
+
+      - name: Build Terminal Binaries (CLI & TUI)
+        run: |
+          cargo build --release --bin sonora --bin sonora-tui
+
+      - name: Package Windows Artifacts
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p dist-windows
+
+          # Find MSI
+          MSI=$(find target/release/bundle/msi -name "*.msi" -type f 2>/dev/null | head -1 || true)
+          if [[ -n "$MSI" && -f "$MSI" ]]; then
+            cp "$MSI" "dist-windows/Sonora-v${VERSION}-windows-x86_64.msi"
+          fi
+
+          # Find NSIS EXE
+          NSIS=$(find target/release/bundle/nsis -name "*.exe" -type f 2>/dev/null | head -1 || true)
+          if [[ -n "$NSIS" && -f "$NSIS" ]]; then
+            cp "$NSIS" "dist-windows/Sonora-v${VERSION}-windows-x86_64.exe"
+          fi
+
+          # Package terminal bundle
+          ./scripts/package-terminal.sh windows x86_64 target/release dist-windows "$VERSION"
+
+          ls -lh dist-windows/
+
+      - name: Upload Windows Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-artifacts
+          path: dist-windows/*
+          if-no-files-found: error
+
+  build-macos:
+    name: Build macOS Packages (${{ matrix.arch }})
+    needs: test
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            arch: aarch64
+          - target: x86_64-apple-darwin
+            arch: x86_64
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract version
+        id: version
+        run: |
+          VERSION="${{ github.event.inputs.tag_name || github.ref_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Setup Rust cache
+        uses: Swatinem/rust-cache@v2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build desktop frontend
+        run: |
+          npm --prefix apps/desktop install
+          npm --prefix apps/desktop run build
+
+      - name: Build Tauri Desktop Package (DMG)
+        run: |
+          npm --prefix apps/desktop run tauri:build -- --bundles dmg --target ${{ matrix.target }}
+
+      - name: Build Terminal Binaries (CLI & TUI)
+        run: |
+          cargo build --release --target ${{ matrix.target }} --bin sonora --bin sonora-tui
+
+      - name: Package macOS Artifacts
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          mkdir -p dist-macos
+
+          # Find DMG
+          DMG=$(find target/${{ matrix.target }}/release/bundle/dmg -name "*.dmg" -type f 2>/dev/null | head -1 || find target/release/bundle/dmg -name "*.dmg" -type f 2>/dev/null | head -1 || true)
+          if [[ -n "$DMG" && -f "$DMG" ]]; then
+            cp "$DMG" "dist-macos/Sonora-v${VERSION}-macos-${{ matrix.arch }}.dmg"
+          else
+            echo "Warning: DMG not found in expected folder"
+          fi
+
+          # Package terminal bundle
+          ./scripts/package-terminal.sh macos ${{ matrix.arch }} target/${{ matrix.target }}/release dist-macos "$VERSION"
+
+          ls -lh dist-macos/
+
+      - name: Upload macOS Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-${{ matrix.arch }}-artifacts
+          path: dist-macos/*
+          if-no-files-found: error
+
+  publish:
+    name: Validate Manifest, Checksums & Publish Release
+    needs: [build-linux, build-windows, build-macos]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract tag and version
+        id: release_info
+        run: |
+          TAG="${{ github.event.inputs.tag_name || github.ref_name }}"
+          VERSION="${TAG#v}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create release distribution directory
+        run: mkdir -p dist-release
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-artifacts
+          path: dist-release
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-artifacts
+          path: dist-release
+        continue-on-error: true
+
+      - name: Download macOS aarch64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-aarch64-artifacts
+          path: dist-release
+        continue-on-error: true
+
+      - name: Download macOS x86_64 artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x86_64-artifacts
+          path: dist-release
+        continue-on-error: true
+
+      - name: Generate and verify SHA-256 checksums
+        run: |
+          ./scripts/generate-checksums.sh dist-release
+
+      - name: Validate release manifest
+        run: |
+          ./scripts/validate-release.sh dist-release "${{ steps.release_info.outputs.version }}"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: Sonora ${{ steps.release_info.outputs.tag }}
+          body_path: RELEASE_NOTES.md
+          draft: false
+          prerelease: false
+          files: dist-release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,145 +1,145 @@
-# Sonora v0.1.0
+# Sonora
 
-Local-first desktop music player: a Rust audio engine driving a Tauri desktop
-GUI, a terminal UI, and a scriptable CLI. Audiophile playback, synchronized
-lyrics, dynamic theming, sandboxed WASM plugins, and a Git-backed extension
-marketplace — no accounts, no telemetry, no streaming lock-in.
+Local-first desktop and terminal music player: a Rust audio engine driving a modern desktop GUI, an interactive terminal UI, and a scriptable CLI. Audiophile-grade playback, synchronized lyrics, dynamic theming, sandboxed WASM plugins, and a community extension marketplace — no accounts, no telemetry, no cloud streaming lock-in.
 
-> **Platform status (v0.1.0):** Linux is the primary, tested platform.
-> macOS and Windows build from the same codebase (portable Rust + cpal +
-> Tauri) and use native data directories, but receive only best-effort
-> testing in this release. See [docs/11-development-roadmap.md](docs/11-development-roadmap.md).
+---
 
-## Quick start
+## 📥 Download
 
-Prerequisites: Rust stable toolchain, Node.js 20. On Linux you also need
-system libraries for audio and the desktop shell:
+Pre-built releases are ready to download and run without compiling or installing developer tools.
 
+👉 **[Download the Latest Release (v0.1.0)](https://github.com/Sumeet-basfore/sonora/releases/latest)**
+
+### Desktop Applications (Graphical)
+
+| Operating System | Package Format | Download Links |
+|---|---|---|
+| **Linux (x86_64)** *(Primary)* | Universal AppImage<br>Debian / Ubuntu (.deb) | [AppImage](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Debian Package (.deb)](https://github.com/Sumeet-basfore/sonora/releases/latest) |
+| **Windows (x86_64)** *(Best-effort)* | Windows Installer (.msi)<br>Setup Executable (.exe) | [MSI Installer](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Setup EXE](https://github.com/Sumeet-basfore/sonora/releases/latest) |
+| **macOS** *(Best-effort)* | Apple Silicon (M1/M2/M3)<br>Intel (x86_64) | [Apple Silicon DMG](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Intel DMG](https://github.com/Sumeet-basfore/sonora/releases/latest) |
+
+### Terminal Applications (`sonora` CLI + `sonora-tui`)
+
+Includes both the full-screen terminal player (`sonora-tui`) and the scriptable command-line utility (`sonora`) in a single bundle:
+
+* **Linux (x86_64):** `Sonora-v0.1.0-linux-x86_64-terminal.tar.gz`
+* **Windows (x86_64):** `Sonora-v0.1.0-windows-x86_64-terminal.zip`
+* **macOS (Apple Silicon & Intel):** `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz` / `Sonora-v0.1.0-macos-x86_64-terminal.tar.gz`
+
+---
+
+## 🚀 Quick Install & Run
+
+### Desktop GUI
+
+#### Linux AppImage (Universal)
 ```sh
-sudo apt-get install -y libasound2-dev libwebkit2gtk-4.1-dev \
-  libjavascriptcoregtk-4.1-dev libsoup-3.0-dev
+chmod +x Sonora-v*-linux-x86_64.AppImage
+./Sonora-v*-linux-x86_64.AppImage
 ```
 
+#### Linux Debian/Ubuntu (.deb)
 ```sh
-git clone https://github.com/sonora-audio/sonora
+sudo dpkg -i Sonora-v*-linux-x86_64.deb
+```
+
+#### Windows & macOS
+* **Windows:** Run the `.msi` or `.exe` installer.
+* **macOS:** Open the `.dmg` and drag `Sonora.app` to Applications.
+
+### Terminal (CLI & TUI)
+
+Extract the archive and run directly:
+```sh
+# Run the full-screen terminal player:
+./sonora-tui
+
+# Run CLI status or scan commands:
+./sonora status
+./sonora scan /path/to/music
+```
+
+📖 Full step-by-step setup and PATH instructions: **[docs/INSTALLATION.md](docs/INSTALLATION.md)**
+
+---
+
+## 🎵 Supported Formats
+
+FLAC, ALAC, WAV, AIFF, MP3, AAC/M4A, Ogg Vorbis, Opus — decoded with **Symphonia**, tagged with **Lofty**. Corrupted or unreadable files are logged and skipped safely without stopping library scans.
+
+---
+
+## ✨ Key Features
+
+* **Real-Time Audio Engine** — dedicated audio thread with zero allocation or mutex locking in the CPAL render loop, lock-free ring buffer (`rtrb`), 10-band parametric EQ, and lock-free visualizer taps.
+* **Instant Library Search** — SQLite + FTS5 full-text search index, instant fuzzy search over title, artist, album, and genre, automatic album art caching.
+* **Synchronized Lyrics** — 5 display modes (Classic, Cinematic, Compact, Minimal, Dual-line), live timing synchronization, click-to-seek, manual offset calibration, and local `.lrc` / LRCLIB cascade.
+* **Visualizer Suite** — FFT-based spectrum analysis off the real-time audio thread, frame-rate independent rendering.
+* **Customization & Themes** — semantic color tokens, light/dark modes, customizable accent colors, responsive layout toggles, 5 album art display styles.
+* **Sandboxed WASM Plugins** — capability-gated Wasmtime sandbox with strict memory and system call constraints; crashing plugins never interrupt playback.
+* **Offline-First Marketplace** — Git-backed registry (`community-registry/`) with SHA-256 checksum-verified extensions, rollback, and uninstallation.
+
+---
+
+## 🛠️ For Developers: Build From Source
+
+Building from source is completely optional. If you want to contribute or build locally:
+
+### Prerequisites
+* Rust stable toolchain (`rustup update stable`)
+* Node.js 20+
+* Linux dependencies: `sudo apt-get install -y libasound2-dev libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev`
+
+### Build & Run
+```sh
+git clone https://github.com/Sumeet-basfore/sonora.git
 cd sonora
 
-# Rust workspace (engine, library, lyrics, plugins, registry, CLI, TUI)
+# Build entire workspace (engine, library, lyrics, plugin host, CLI, TUI, desktop)
 cargo build --workspace
 
-# Desktop frontend
+# Build desktop frontend
 npm --prefix apps/desktop install
 npm --prefix apps/desktop run build
 
-# Run it (pick one)
-cargo run -p sonora-cli -- status     # scriptable CLI
-cargo run -p sonora-tui               # terminal UI
-cargo run -p sonora-desktop           # Tauri backend (GUI via `npm --prefix apps/desktop run dev`)
+# Run applications
+cargo run -p sonora-cli -- status    # Scriptable CLI
+cargo run -p sonora-tui              # Interactive TUI
+npm --prefix apps/desktop run tauri  # Desktop GUI
 ```
 
-First run: open **Settings → Scan**, point Sonora at a music folder, and
-press play. The library rescans incrementally (unchanged files are skipped by
-mtime/size), and files you delete are pruned from the index on the next scan.
-
-## Supported formats
-
-FLAC, ALAC, WAV, AIFF, MP3, AAC/M4A, Ogg Vorbis, Opus — decoded with
-Symphonia, tagged with Lofty. Corrupt or unreadable files are counted in the
-scan report and skipped; they never abort a scan.
-
-## Features
-
-- **Playback** — gapless queue, seek, volume, ReplayGain-aware pipeline with
-  10-band parametric EQ, visualizer tap (spectrum/wave/mirror).
-- **Library** — SQLite + FTS5 search (fuzzy, sub-millisecond on large
-  libraries), multi-folder scans, m3u playlists, play history.
-- **Lyrics** — embedded tags → sidecar `.lrc` → SQLite cache → LRCLIB, plus
-  sandboxed provider plugins (LRCLIB and Genius ship in `plugins/`).
-- **Themes** — built-in presets plus marketplace themes (full token
-  definitions + optional guarded CSS), live preview, persisted selection.
-- **Plugins** — WASM-only sandbox (fuel-metered, 32 MiB memory cap,
-  capability-gated host APIs: library/metadata/lyrics/visualizer/UI/cache/
-  allow-listed network). A crashing plugin can never take down playback.
-- **Marketplace** — Git-backed `community-registry/` (`plugins.json` /
-  `themes.json`): checksum-verified atomic installs, versioned backups,
-  rollback, uninstall, offline cache. No accounts, no payments, no signing
-  yet (SHA-256 integrity only in v1).
-
-## Plugin development
-
-Each plugin is a standalone crate (not a workspace member) built to
-`wasm32-unknown-unknown`:
-
+### Running Tests
 ```sh
-rustup target add wasm32-unknown-unknown
-cd plugins/spectrum-plus && ./build.sh   # -> plugin.wasm
-cargo test                               # pure-logic unit tests (host-side)
+cargo fmt --all -- --check
+cargo clippy --workspace --all-targets -- -D warnings
+cargo test --workspace
+npm --prefix apps/desktop test
 ```
 
-Sandbox integration tests live in `crates/sonora-plugin/tests/` and run with
-the workspace suite. Start from `plugins/example/` (minimal WAT module) or
-copy `plugins/lyrics-lrclib/` (networked provider). Rules that matter:
+---
 
-- `manifest.json` (`id`, semver `version`, `api_version: 1`, declared
-  capabilities, bare-`.wasm` `entry`, `allowed_domains` iff `network:fetch`).
-- Import only `sonora.*` host functions your capabilities entitle you to —
-  anything else (including WASI) fails the load.
-- Fuel budget is shared per call: keep parsing linear; megabyte-scale HTML
-  scanning is fine, infinite loops trap.
-- Query `lyrics_fetch`/`metadata_fetch` return `1` + result JSON or `0` for
-  miss; `visualizer_info` returns a descriptor + computed frame (rendering
-  stays client-side).
+## 🔌 Plugin & Theme Development
 
-Docs: [docs/05-plugin-system.md](docs/05-plugin-system.md),
-[docs/09-security-and-permissions.md](docs/09-security-and-permissions.md).
+* **Plugin Architecture:** Sandboxed WASM modules implementing the `sonora_plugin_*` ABI. See [`docs/05-plugin-system.md`](docs/05-plugin-system.md) and [`plugins/example/`](plugins/example/).
+* **Theme Development:** Pure JSON token schema + sanitized CSS textures. See [`docs/06-theming-and-customization.md`](docs/06-theming-and-customization.md) and [`themes/sonora-retro/`](themes/sonora-retro/).
+* **Community Registry:** Reproducible package generator and manifest schema. See [`community-registry/`](community-registry/).
 
-## Theme development
+---
 
-A theme package is `theme.json` (full definition: `id`, `name`, semver
-`version`, `author`, `mode`, all required design tokens) plus optional
-`theme.css` for texture only. Token values must be plain colors; CSS must not
-contain `url(`, `@import`, scripts, or remote fetches — both are enforced at
-install and at serve time. See `themes/sonora-retro/` and
-[docs/06-theming-and-customization.md](docs/06-theming-and-customization.md).
-Validate with `cargo test -p sonora-registry theme`.
+## 📚 Documentation & Roadmap
 
-## Marketplace
+* [System Architecture Specification](docs/04-system-architecture.md)
+* [Plugin System & Sandboxing](docs/05-plugin-system.md)
+* [Theming & Design Tokens](docs/06-theming-and-customization.md)
+* [Lyrics System Specification](docs/07-lyrics-system.md)
+* [Community Marketplace Specification](docs/08-marketplace.md)
+* [Security & Permissions Model](docs/09-security-and-permissions.md)
+* [Development Roadmap](docs/11-development-roadmap.md)
+* [Architecture Decision Records (ADRs)](docs/12-decision-log.md)
+* [Release Notes](RELEASE_NOTES.md)
 
-```sh
-python3 community-registry/tools/build.py   # deterministic zips + indexes
-```
+---
 
-Submissions today are manual PRs adding sources + entries to `tools/build.py`;
-the client validates schema, digests, identity, and capability ceilings, and
-treats all registry metadata as untrusted. Details:
-[docs/08-marketplace.md](docs/08-marketplace.md).
+## 📄 License
 
-## Troubleshooting
-
-| Symptom | Fix |
-|---|---|
-| No audio device | Sonora falls back to a virtual output and logs a warning; check PipeWire/ALSA. |
-| Scan finds 0 files | Only the formats above are indexed; check the folder path and permissions. |
-| Ghost entries after moving files | Rescan — missing files are pruned automatically (`pruned_missing` in the report). |
-| A plugin crashes | It is isolated and disabled after 3 crashes/60 s; others keep running. Reinstall or update it from Extensions. |
-| Bad update | Roll back from Extensions → Installed → Roll back (backups kept per version). |
-| Offline marketplace | Last validated index is served and flagged offline in the UI. |
-| Theme looks broken after uninstall | Selection resets to the built-in default automatically. |
-| Slow first import | ~1 ms/file single-threaded (≈11 s per 10k tracks); rescans skip unchanged files in milliseconds. |
-
-## Contributing
-
-- `cargo fmt --all`, `cargo clippy --workspace --all-targets -- -D warnings`,
-  `cargo test --workspace`, `npm --prefix apps/desktop test` must all pass
-  (enforced by CI, including deterministic registry rebuilds).
-- Rust: no `unwrap`/`expect` outside tests; errors via `SonoraError`.
-- Frontend: escape all untrusted strings with `escapeHtml`; keep
-  `aria-label`s on controls; respect `prefers-reduced-motion`.
-- Security-sensitive areas (sandbox boundary, installer, theme validation):
-  fail closed, add a regression test per fix.
-
-## License
-
-MIT OR Apache-2.0 — see [LICENSE-MIT](LICENSE-MIT) and
-[LICENSE-APACHE](LICENSE-APACHE). Product direction in
-[docs/01-product-vision.md](docs/01-product-vision.md).
+Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE).

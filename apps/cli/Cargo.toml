@@ -5,9 +5,14 @@ edition.workspace = true
 license.workspace = true
 authors.workspace = true
 
+[[bin]]
+name = "sonora"
+path = "src/main.rs"
+
 [dependencies]
 sonora-core.workspace = true
 sonora-common.workspace = true
 clap.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+

@@ -3,7 +3,7 @@ use sonora_common::{init_logging, LogConfig, Result};
 use sonora_core::{SonoraApp, SonoraConfig};
 
 #[derive(Parser)]
-#[command(name = "sonora-cli", about = "Sonora Command-Line Interface", version)]
+#[command(name = "sonora", about = "Sonora Command-Line Interface", version)]
 struct Cli {
     #[command(subcommand)]
     command: Option<Commands>,

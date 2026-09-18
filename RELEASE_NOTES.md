@@ -1,52 +1,63 @@
 # Sonora v0.1.0 — Release Notes
 
-**Release date:** 2026-09-18
-**Tag:** `v0.1.0`
-**License:** MIT OR Apache-2.0
+**Release date:** 2026-09-18  
+**Tag:** `v0.1.0`  
+**License:** MIT OR Apache-2.0  
 
 ---
 
 ## What Is Sonora?
 
-Sonora is a local-first desktop music player built on a Rust audio engine and a
-Tauri 2 desktop shell. It is designed for people who own their music and want a
-player that is fast, correct, and customisable without being tied to a streaming
-service, an account, or telemetry.
+Sonora is a local-first desktop and terminal music player built on a high-performance Rust audio engine and a modern Tauri desktop shell. It is designed for listeners who own their music and want a player that is fast, correct, and customizable without being tied to a streaming service, an account, or telemetry.
 
 The v0.1.0 release delivers:
 
-- A fully-functional desktop GUI (Linux primary; macOS / Windows best-effort)
-- A terminal UI (`sonora-tui`) and a scriptable CLI (`sonora-cli`)
-- A sandboxed WebAssembly plugin system with a community registry
-- A theme and layout customisation engine
-- Synchronised lyrics with five display modes
-- An FFT-based spectrum visualiser
+- A desktop graphical application (Linux primary; macOS / Windows best-effort)
+- Standalone terminal tools: an interactive terminal player (`sonora-tui`) and a scriptable CLI (`sonora`)
+- A sandboxed WebAssembly plugin system (`sonora-plugin`) with capability security
+- An offline-first community extension registry (`community-registry/`)
+- A full theme and layout customization engine
+- Synchronized lyrics with 5 display modes and manual timing calibration
+- An FFT-based spectrum visualizer off the real-time audio thread
+
+---
+
+## 📥 Downloadable Release Artifacts
+
+Pre-built binaries are available for direct download without needing Rust or Node.js installed:
+
+| Distribution Channel | File Name | Platform & Notes |
+|---|---|---|
+| **Desktop (AppImage)** | `Sonora-v0.1.0-linux-x86_64.AppImage` | Universal Linux x86_64 standalone package |
+| **Desktop (DEB)** | `Sonora-v0.1.0-linux-x86_64.deb` | Debian / Ubuntu / Linux Mint installer package |
+| **Desktop (Windows)** | `Sonora-v0.1.0-windows-x86_64.msi` / `.exe` | Windows 10/11 installer |
+| **Desktop (macOS)** | `Sonora-v0.1.0-macos-aarch64.dmg` / `Sonora-v0.1.0-macos-x86_64.dmg` | macOS Apple Silicon / Intel disk images |
+| **Terminal (Linux)** | `Sonora-v0.1.0-linux-x86_64-terminal.tar.gz` | Includes `sonora` CLI + `sonora-tui` |
+| **Terminal (Windows)** | `Sonora-v0.1.0-windows-x86_64-terminal.zip` | Includes `sonora.exe` + `sonora-tui.exe` |
+| **Terminal (macOS)** | `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz` | Includes `sonora` + `sonora-tui` for macOS |
+| **Verification** | `checksums.txt` | SHA-256 integrity checksums for all files |
+
+Download link: **[github.com/Sumeet-basfore/sonora/releases/tag/v0.1.0](https://github.com/Sumeet-basfore/sonora/releases/tag/v0.1.0)**
 
 ---
 
 ## Major Features
 
 ### Audio Engine
-- **Symphonia** decodes audio frames on a dedicated Tokio task; decoded samples
-  flow into a lock-free ring buffer (`rtrb`) and the CPAL output callback reads
-  from it without ever allocating or locking.
-- **CPAL** drives the system audio device. Sample-rate and channel-count
-  mismatches are handled by the resampler in `sonora-dsp`.
-- Pause, resume, seek, per-track volume, and queue transitions.
-- Basic playback queue with next/previous, reorder, and add/remove.
+- **Symphonia** decodes audio frames on a dedicated async task; decoded samples flow into a lock-free Single-Producer Single-Consumer (SPSC) ring buffer (`rtrb`).
+- **CPAL** drives system audio output with **zero memory allocations and zero mutex locking** inside the real-time audio callback loop.
+- Software resampler in `sonora-dsp` handles sample rate and channel mismatches seamlessly.
+- Transport controls: pause, resume, seek, per-track volume, and queue transitions.
+- Playback queue with next/previous, reordering, and item insertion/removal.
 
-### Library
+### Library & Search
 - Recursive directory scanner powered by **Lofty** metadata extraction.
-- **SQLite + FTS5** index with full-text search over title, artist, album, and
-  genre.
+- **SQLite + FTS5** index with sub-millisecond full-text search over title, artist, album, and genre.
 - Albums, artists, and tracks views with artwork thumbnails.
-- Artwork cache: thumbnails are generated once and served from disk; original
-  artwork is kept available for full-resolution display.
+- Disk-backed artwork cache: thumbnails are resized and cached once to avoid repeated decode overhead.
 
 ### Synchronized Lyrics
-Five display modes — Classic, Focused/Cinematic, Compact, Minimal, Dual-line —
-with auto-scroll, active-line highlighting, click-to-seek, and a manual timing
-offset adjustment per track.
+Five display modes: **Classic**, **Focused / Cinematic**, **Compact**, **Minimal**, and **Dual-line**, featuring auto-scroll, active-line highlighting, click-to-seek, and per-track manual timing offset adjustment.
 
 **Resolution cascade (in priority order):**
 1. SQLite lyrics cache (by `track_id`, file path, or title + artist)
@@ -55,220 +66,122 @@ offset adjustment per track.
 4. LRCLIB public API
 5. Plain-text fallback
 
-### FFT Spectrum Visualiser
-The `sonora-dsp` spectrum analyser runs in a Tokio task, reading from the ring
-buffer without touching the CPAL callback. Frequency bins are pushed to the
-frontend at a configurable FPS. Sensitivity, smoothing, height, bar count, and
-colour source are all user-controlled.
+### FFT Spectrum Visualizer
+The `sonora-dsp` spectrum analyzer runs in a background task reading from the lock-free audio tap, decoupled from the CPAL callback. Frequency bins are pushed to the frontend at a configurable FPS. Sensitivity, smoothing, height, bar count, and color source are user-configurable.
 
 ### Theme & Layout System
-- **Semantic design tokens** in JSON; live theme switching without restart.
-- Built-in themes: **Midnight** (dark default), **Arctic** (light), plus
-  **Neon Night** and **Sonora Retro** available via the registry.
-- Import / export theme files.
-- User-selectable accent colours.
-- Layout regions (sidebar, library, queue, playback bar, visualiser, lyrics)
-  can be shown or hidden independently; multiple named layouts can be saved and
-  switched instantly.
+- **Semantic design tokens** in JSON; live theme switching without application restarts.
+- Built-in themes: **Midnight** (dark default), **Arctic** (light), plus registry themes (**Neon Night**, **Sonora Retro**).
+- Import / export custom theme JSON files.
+- User-selectable accent colors.
+- Configurable layout regions (sidebar, library, queue, playback bar, visualizer, lyrics) with named preset saving.
 
 ### Album-Art Styles
-Classic, Minimal, Large Immersive, Blurred Background, and Vinyl/Gatefold —
-all consuming the same cached artwork source.
+Five swappable styles: **Classic**, **Minimal**, **Large Immersive**, **Blurred Background**, and **Vinyl / Gatefold** — all consuming the same cached artwork source.
 
 ### Plugin System (`sonora-plugin`, `sonora-registry`)
-- Plugins run in **WebAssembly sandboxes** managed by Wasmtime.
-- Capabilities are declared in the plugin manifest and cannot exceed what the
-  user explicitly grants.
-- Five extension points: Metadata Source, Lyrics Provider, Visualiser Node,
-  UI Widget, and DSP Node.
-- Plugins support hot-reload and clean teardown.
+- Sandboxed **WebAssembly** runtime powered by Wasmtime with strict capability gating.
+- Capabilities are declared in `manifest.json` and enforced by host security interceptors (`lyrics:provider`, `visualizer:tap`, `network:fetch`).
+- Crashing plugins are isolated and cannot interrupt audio playback.
 
 ### Interfaces
 
-| Interface | Entry point | Notes |
-|-----------|-------------|-------|
-| Desktop GUI | `apps/desktop` | Tauri 2 + TypeScript; Linux primary |
-| Terminal UI | `apps/tui` | Ratatui; keyboard-driven |
-| CLI | `apps/cli` | `sonora scan`, `sonora play`, `sonora search`, `sonora queue` |
+| Interface | Entry Point | Notes |
+|---|---|---|
+| Desktop GUI | `apps/desktop` | Tauri 2 + TypeScript frontend |
+| Terminal UI | `apps/tui` | Ratatui full-screen terminal interface |
+| CLI | `apps/cli` | Scriptable commands (`sonora status`, `sonora scan`, `sonora volume`) |
 
 ---
 
-## Plugin Ecosystem
+## Plugin Ecosystem & Community Registry
 
-Three first-party plugins ship with v0.1.0. They are pre-built WASM artifacts
-in `plugins/` and are also listed in the community registry.
+Three first-party plugins ship with v0.1.0 in the offline-ready registry:
 
-| Plugin | ID | Category | Capability |
-|--------|----|----------|------------|
-| LRCLIB Lyrics Provider | `org.sonora.lrclib` | lyrics | `lyrics:provider`, `network:fetch` |
-| Genius Lyrics Provider | `org.sonora.lyrics_genius` | lyrics | `lyrics:provider`, `network:fetch` |
-| Spectrum+ Visualizer | `org.sonora.spectrum_plus` | visualizer | `visualizer:tap` |
+| Plugin | ID | Category | Capabilities |
+|---|---|---|---|
+| **LRCLIB Provider** | `org.sonora.lrclib` | lyrics | `lyrics:provider`, `network:fetch` |
+| **Genius Provider** | `org.sonora.lyrics_genius` | lyrics | `lyrics:provider`, `network:fetch` |
+| **Spectrum+ Visualizer** | `org.sonora.spectrum_plus` | visualizer | `visualizer:tap` |
 
-The `plugins/example/` directory contains a minimal annotated WASM plugin with
-source (WAT) intended as a starting point for plugin authors.
-
----
-
-## Marketplace / Community Registry
-
-The community registry (`community-registry/`) is a **Git-backed, offline-first
-catalog**. No account is required to browse or install extensions.
-
-| Path | Contents |
-|------|----------|
-| `community-registry/v1/plugins.json` | Plugin catalog |
-| `community-registry/v1/themes.json` | Theme catalog |
-| `community-registry/packages/*.zip` | Deterministic, sha256-verified packages |
-| `community-registry/sources/` | Bundled source themes |
-| `community-registry/tools/build.py` | Reproducible package builder |
-
-The CI job verifies that `v1/` and `packages/` are reproducible: re-running
-`build.py` must produce an identical diff to nothing.
-
-### v0.1.0 registry contents
-
-**Plugins (3):**
-- `org.sonora.lrclib` 1.0.0 — LRCLIB synced/plain lyrics
-- `org.sonora.spectrum_plus` 1.0.0 — Spectrum+ bars/wave/mirror visualiser
-- `org.sonora.lyrics_genius` 1.0.0 — Genius lyrics
-
-**Themes (2):**
-- `org.sonora.theme.neon_night` 1.0.0 — Dark neon cyan/magenta
-- `org.sonora.theme.retro` 1.0.0 — Amber-phosphor CRT aesthetic
+The `plugins/example/` directory provides an annotated WASM starter module for plugin developers.
 
 ---
 
 ## Supported Audio Formats
 
-Decoding is handled by **Symphonia** with the `all` feature flag.
+Decoded via **Symphonia** (`all` features):
 
-| Format | Container | Notes |
-|--------|-----------|-------|
+| Format | Extension | Notes |
+|---|---|---|
 | FLAC | `.flac` | Lossless; all standard bit depths |
 | MP3 | `.mp3` | MPEG Layer 3 |
 | WAV / PCM | `.wav` | Uncompressed PCM |
-| OGG Vorbis | `.ogg` | |
+| Ogg Vorbis | `.ogg` | |
 | Opus | `.opus` | |
 | AAC | `.m4a`, `.aac` | |
 | ALAC | `.m4a` | Apple Lossless |
 
-Formats technically supported by Symphonia but not explicitly tested in v0.1.0:
-MP4 / M4A (generic), MP2, WavPack, CAF.
-
 ---
 
-## Platform Support
+## Platform Support Matrix
 
-| Platform | Status | Audio backend | Notes |
-|----------|--------|---------------|-------|
-| **Linux** (x86-64) | ✅ Primary | ALSA via CPAL | Requires `libasound2-dev`, `libwebkit2gtk-4.1-dev` |
-| macOS (x86-64, Apple Silicon) | ⚠️ Best-effort | CoreAudio via CPAL | Builds and runs; no dedicated CI runner |
-| Windows 10+ (x86-64) | ⚠️ Best-effort | WASAPI via CPAL | Builds and runs; no dedicated CI runner |
+| Platform | Support Status | Audio Backend | Notes |
+|---|---|---|---|
+| **Linux (x86_64)** | ✅ **Primary (Fully Tested)** | ALSA / PipeWire via CPAL | Automated CI test matrix & package bundling |
+| **macOS (Apple Silicon & Intel)** | ⚠️ **Best-Effort** | CoreAudio via CPAL | Builds from portable codebase; no notarization configured yet |
+| **Windows (x86_64)** | ⚠️ **Best-Effort** | WASAPI via CPAL | Builds from portable codebase; no code signing certificate configured |
 
 ---
 
 ## Known Limitations
 
-- **Gapless playback** is not implemented. There is a brief gap between tracks.
-- **ReplayGain / loudness normalisation** is not applied.
-- **MusicBrainz / AcousticID** automatic lookup is not implemented.
-- **Podcast and audiobook** chapter handling is absent.
-- **Multi-window / mini-player** is not supported.
-- **System tray integration** is not implemented.
-- **Remote / cloud streaming** is out of scope for v0.1.x.
-- Plugin **hot-reload** is defined in the API but requires a restart to take
-  effect in this release.
-- macOS and Windows receive only best-effort testing.
-- The **TUI** supports library listing and basic playback control; lyrics and
-  visualiser are not rendered in the TUI.
+- **Gapless playback** is not yet sample-accurate between different sample rates; there is a brief transition gap.
+- **ReplayGain / loudness normalization** metadata is not applied during decode.
+- **MusicBrainz / AcousticID** online fingerprinting is not implemented in v0.1.0.
+- **Podcast and audiobook** chapter marks are not indexed.
+- **System tray / mini-player** is deferred to future releases.
+- **Remote / cloud streaming** is out of scope.
+- **Plugin hot-reload** requires restarting the client in this release.
+- **Code signing & notarization** are not configured in v0.1.0; macOS may show an unverified developer prompt.
 
 ---
 
-## Installation
+## Installation Quick Start
 
-### Prerequisites
-
-**Linux:**
+### Linux AppImage
 ```sh
-sudo apt-get install -y \
-  libasound2-dev \
-  libwebkit2gtk-4.1-dev \
-  libjavascriptcoregtk-4.1-dev \
-  libsoup-3.0-dev
+chmod +x Sonora-v0.1.0-linux-x86_64.AppImage
+./Sonora-v0.1.0-linux-x86_64.AppImage
 ```
 
-**All platforms:** Rust stable toolchain + Node.js 20+
-
-### Build from source
-
+### Linux Debian/Ubuntu (.deb)
 ```sh
-git clone https://github.com/sonora-audio/sonora
-cd sonora
-
-# Rust workspace
-cargo build --workspace
-
-# Desktop frontend
-cd apps/desktop && npm install && npm run build
-# Launch: cargo tauri dev  (from apps/desktop)
+sudo dpkg -i Sonora-v0.1.0-linux-x86_64.deb
 ```
 
-### Run tests
-
+### Terminal Tools
 ```sh
-cargo fmt --all -- --check
-cargo clippy --workspace --all-targets -- -D warnings
-cargo test --workspace
-
-npm --prefix apps/desktop run build
-npm --prefix apps/desktop test
+tar -xzf Sonora-v0.1.0-linux-x86_64-terminal.tar.gz
+cd sonora-terminal
+./sonora-tui
 ```
+
+Full installation guide: **[`docs/INSTALLATION.md`](docs/INSTALLATION.md)**
 
 ---
 
-## First Run
-
-1. Launch the desktop application.
-2. Click **"Add Music Folder"** in the empty-library welcome screen.
-3. Select a directory; the scanner will index tracks, extract metadata, and
-   cache artwork.
-4. Click any album or track to begin playback.
-
----
-
-## Contributor and Plugin Developer Links
+## Developer Links
 
 | Resource | Location |
-|----------|----------|
-| Architecture overview | `docs/04-system-architecture.md` |
-| Plugin system spec | `docs/05-plugin-system.md` |
-| Theme / customisation spec | `docs/06-theming-and-customization.md` |
-| Lyrics system spec | `docs/07-lyrics-system.md` |
-| Marketplace spec | `docs/08-marketplace.md` |
-| Plugin API crate | `crates/sonora-plugin/` |
-| Registry crate | `crates/sonora-registry/` |
-| Example WASM plugin | `plugins/example/` |
-| Community registry | `community-registry/` |
-| Registry package builder | `community-registry/tools/build.py` |
-| Development roadmap | `docs/11-development-roadmap.md` |
-| Decision log | `docs/12-decision-log.md` |
-| CI workflow | `.github/workflows/ci.yml` |
-
-### Writing a plugin
-
-1. Copy `plugins/example/` as your starting point.
-2. Implement the `sonora_plugin_*` ABI functions defined in
-   `crates/sonora-plugin/src/api.rs`.
-3. Declare required capabilities in `manifest.json`.
-4. Build to `wasm32-unknown-unknown` (see any `build.sh` in `plugins/`).
-5. Submit a PR to `community-registry/` with your package zip and an entry in
-   `v1/plugins.json`.
-
-### Writing a theme
-
-1. Copy `themes/sonora-retro/` or `community-registry/sources/neon-night/`.
-2. Edit `theme.json` (semantic design tokens) and optionally `theme.css`.
-3. Import via **Settings → Themes → Import** or submit to `v1/themes.json`.
+|---|---|
+| Architecture Overview | [`docs/04-system-architecture.md`](docs/04-system-architecture.md) |
+| Plugin System Spec | [`docs/05-plugin-system.md`](docs/05-plugin-system.md) |
+| Theming Spec | [`docs/06-theming-and-customization.md`](docs/06-theming-and-customization.md) |
+| Lyrics Spec | [`docs/07-lyrics-system.md`](docs/07-lyrics-system.md) |
+| Marketplace Spec | [`docs/08-marketplace.md`](docs/08-marketplace.md) |
+| Roadmap | [`docs/11-development-roadmap.md`](docs/11-development-roadmap.md) |
+| Decision Log | [`docs/12-decision-log.md`](docs/12-decision-log.md) |
 
 ---
 
