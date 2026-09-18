@@ -20,10 +20,14 @@ export class LibraryViewComponent {
   constructor(container: HTMLElement) {
     this.container = container;
     this.albumDetail = new AlbumDetailComponent(container);
-    appState.subscribe(() => this.renderCurrentView());
+    appState.subscribe(() => {
+      this.renderCurrentView();
+      this.updatePlayingTrackHighlight();
+    });
     window.addEventListener('sonora-library-updated', () => this.renderCurrentView(true));
     this.renderCurrentView();
   }
+
 
   public async renderCurrentView(force: boolean = false) {
     const activeView = appState.getActiveView();
@@ -308,9 +312,25 @@ export class LibraryViewComponent {
     `;
 
     this.attachTrackRowListeners();
+    this.updatePlayingTrackHighlight();
+  }
+
+  private updatePlayingTrackHighlight() {
+    const currentTrackId = appState.getStatus().current_track?.track_id;
+    const isPlaying = appState.getStatus().state === 'Playing';
+    const rows = this.container.querySelectorAll('.track-table-row');
+    rows.forEach((row) => {
+      const tid = parseInt(row.getAttribute('data-track-id') || '0', 10);
+      if (currentTrackId && tid === currentTrackId && isPlaying) {
+        row.classList.add('is-playing');
+      } else {
+        row.classList.remove('is-playing');
+      }
+    });
   }
 
   private attachTrackRowListeners() {
+
     const rows = this.container.querySelectorAll('.track-table-row');
     rows.forEach((row) => {
       const trackId = parseInt(row.getAttribute('data-track-id') || '0', 10);

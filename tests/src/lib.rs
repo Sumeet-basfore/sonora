@@ -1326,3 +1326,55 @@ mod tests {
         Ok(())
     }
 }
+
+#[test]
+fn test_decode_all_supported_audio_formats() {
+    let files = [
+        "/tmp/sonora_test_audio/test_440hz.wav",
+        "/tmp/sonora_test_audio/test_440hz.flac",
+        "/tmp/sonora_test_audio/test_440hz.mp3",
+        "/tmp/sonora_test_audio/test_440hz.ogg",
+        "/tmp/sonora_test_audio/test_440hz.m4a",
+        "/tmp/sonora_test_audio/test_440hz_alac.m4a",
+        "/tmp/sonora_test_audio/test_96k_24bit.flac",
+        "/tmp/sonora_test_audio/test_mono.wav",
+    ];
+
+    for path in &files {
+        println!("Testing decoder for {path}...");
+        let mut decoder = sonora_audio::AudioDecoder::open(path)
+            .unwrap_or_else(|e| panic!("Failed to open {path}: {e}"));
+        let info = decoder.info().clone();
+        println!(
+            "  Stream info: sample_rate={}, channels={}",
+            info.sample_rate, info.channels
+        );
+        assert!(info.sample_rate > 0);
+
+        let mut total_samples = 0;
+        let mut packets = 0;
+        while let Ok(Some(samples)) = decoder.decode_next_stereo() {
+            assert_eq!(samples.len() % 2, 0, "Samples must be interleaved stereo");
+            total_samples += samples.len();
+            packets += 1;
+        }
+        println!("  Decoded {total_samples} samples across {packets} packets");
+        assert!(total_samples > 0, "File {path} produced 0 samples!");
+
+        // Test seek to 1 second
+        decoder.seek(1000).expect("Seek to 1s must succeed");
+        let mut after_seek_samples = 0;
+        while let Ok(Some(samples)) = decoder.decode_next_stereo() {
+            after_seek_samples += samples.len();
+        }
+        println!("  After seek to 1s: decoded {after_seek_samples} samples");
+        assert!(
+            after_seek_samples > 0,
+            "Decoding after seek produced 0 samples"
+        );
+        assert!(
+            after_seek_samples < total_samples,
+            "After seek samples should be fewer than total"
+        );
+    }
+}

@@ -727,21 +727,45 @@ input {
   transition: background var(--duration-fast);
 }
 
-.track-row:hover {
+.track-row:hover,
+.track-table-row:hover {
   background: var(--bg-surface-hover);
 }
 
-.track-row:hover .track-index {
+.track-row:hover .track-index,
+.track-table-row:hover .row-num {
   display: none;
 }
 
-.track-row:hover .row-play-btn {
+.track-row:hover .row-play-btn,
+.track-table-row:hover .row-play-btn {
   display: inline-block;
 }
 
-.track-row:hover .row-queue-btn {
+.track-row:hover .row-queue-btn,
+.track-table-row:hover .row-queue-btn {
   opacity: 1;
 }
+
+.track-row.is-playing,
+.track-table-row.is-playing {
+  background: var(--accent-subtle) !important;
+}
+
+.track-row.is-playing .row-track-title,
+.track-row.is-playing .track-index,
+.track-table-row.is-playing .row-title-text,
+.track-table-row.is-playing .row-num {
+  color: var(--accent-primary) !important;
+  font-weight: var(--weight-semibold);
+}
+
+.track-row.is-playing .col-artist,
+.track-table-row.is-playing .col-artist {
+  color: var(--text-primary);
+}
+
+
 
 /* --- Persistent Playback Bar --- */
 .playback-bar {

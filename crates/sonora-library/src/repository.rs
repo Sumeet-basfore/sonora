@@ -7,9 +7,8 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::time::UNIX_EPOCH;
 
-pub const SUPPORTED_EXTENSIONS: &[&str] = &[
-    "flac", "mp3", "wav", "aac", "m4a", "ogg", "opus", "alac", "aiff",
-];
+pub const SUPPORTED_EXTENSIONS: &[&str] =
+    &["flac", "mp3", "wav", "aac", "m4a", "ogg", "alac", "aiff"];
 
 use serde::{Deserialize, Serialize};
 

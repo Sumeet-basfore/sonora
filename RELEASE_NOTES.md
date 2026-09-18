@@ -115,12 +115,13 @@ Decoded via **Symphonia** (`all` features):
 | Format | Extension | Notes |
 |---|---|---|
 | FLAC | `.flac` | Lossless; all standard bit depths |
-| MP3 | `.mp3` | MPEG Layer 3 |
-| WAV / PCM | `.wav` | Uncompressed PCM |
-| Ogg Vorbis | `.ogg` | |
-| Opus | `.opus` | |
-| AAC | `.m4a`, `.aac` | |
 | ALAC | `.m4a` | Apple Lossless |
+| WAV / PCM | `.wav` | Uncompressed PCM |
+| AIFF | `.aiff` | Audio Interchange File Format |
+| MP3 | `.mp3` | MPEG Layer 3 |
+| AAC | `.m4a`, `.aac` | Advanced Audio Coding in MP4/ADTS |
+| Ogg Vorbis | `.ogg` | Vorbis audio in Ogg container |
+
 
 ---
 

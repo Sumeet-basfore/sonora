@@ -35,7 +35,11 @@ export class AlbumDetailComponent {
         this.render();
       }
     });
+    appState.subscribe(() => {
+      this.updatePlayingTrackHighlight();
+    });
   }
+
 
   public async loadAlbum(albumId: number, title: string, artist?: string) {
     this.albumId = albumId;
@@ -166,9 +170,25 @@ export class AlbumDetailComponent {
     `;
 
     this.attachEventListeners();
+    this.updatePlayingTrackHighlight();
+  }
+
+  private updatePlayingTrackHighlight() {
+    const currentTrackId = appState.getStatus().current_track?.track_id;
+    const isPlaying = appState.getStatus().state === 'Playing';
+    const rows = this.container.querySelectorAll('.track-row');
+    rows.forEach((row) => {
+      const tid = parseInt(row.getAttribute('data-track-id') || '0', 10);
+      if (currentTrackId && tid === currentTrackId && isPlaying) {
+        row.classList.add('is-playing');
+      } else {
+        row.classList.remove('is-playing');
+      }
+    });
   }
 
   private attachEventListeners() {
+
     const playAlbumBtn = this.container.querySelector('.play-album-btn');
     playAlbumBtn?.addEventListener('click', () => {
       appState.playAlbum(this.albumId);

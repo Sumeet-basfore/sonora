@@ -81,8 +81,18 @@ export class MarketplaceViewComponent {
       this.installed = installed;
       this.updates = orderUpdates(updates);
       this.notice = null;
-    } catch (e) {
-      this.notice = { kind: 'error', text: `Marketplace unavailable: ${e}` };
+    } catch {
+      // Graceful fallback for offline / unreachable registry
+      try {
+        const installed = await api.marketplaceInstalled();
+        this.installed = installed;
+      } catch {
+        this.installed = [];
+      }
+      this.notice = {
+        kind: 'error',
+        text: 'Unable to reach the extension registry. You can still manage your installed extensions.',
+      };
     }
     this.render();
   }
@@ -97,16 +107,23 @@ export class MarketplaceViewComponent {
       this.catalog = catalog;
       this.installed = installed;
       this.updates = orderUpdates(updates);
-    } catch (e) {
-      this.notice = { kind: 'error', text: `Refresh failed: ${e}` };
+    } catch {
+      this.notice = {
+        kind: 'error',
+        text: 'Unable to refresh extension catalog. Showing cached data.',
+      };
     }
     this.render();
   }
 
   private renderLoading() {
     this.container.innerHTML = `
-      <div class="view-loading-state"><div class="spinner"></div><p>Loading marketplace…</p></div>`;
+      <div class="view-loading-state">
+        <div class="spinner"></div>
+        <p>Loading extensions…</p>
+      </div>`;
   }
+
 
   private render() {
     if (!this.active) return;
@@ -385,12 +402,15 @@ export class MarketplaceViewComponent {
     this.render();
     try {
       await fn();
-    } catch (e) {
-      this.notice = { kind: 'error', text: String(e) };
+    } catch (e: any) {
+      const raw = e?.message || String(e);
+      const clean = raw.replace(/^Error:\s*/i, '').replace(/^Backend error:\s*/i, '');
+      this.notice = { kind: 'error', text: clean || 'Operation failed. Please try again.' };
       this.render();
     } finally {
       this.busy.delete(id);
       this.render();
     }
+
   }
 }

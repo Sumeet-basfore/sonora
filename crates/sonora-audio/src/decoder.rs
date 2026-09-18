@@ -1,6 +1,6 @@
 use sonora_common::{Result, SonoraError};
 use std::fs::File;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use symphonia::core::audio::Channels;
 use symphonia::core::codecs::audio::{AudioDecoder as SymphoniaAudioDecoder, AudioDecoderOptions};
 use symphonia::core::codecs::CodecParameters;
@@ -21,23 +21,48 @@ pub struct StreamInfo {
 
 /// Symphonia-backed audio decoder for file playback.
 pub struct AudioDecoder {
+    path: PathBuf,
     format_reader: Box<dyn FormatReader>,
     decoder: Box<dyn SymphoniaAudioDecoder>,
     track_id: u32,
     raw_sample_buf: Vec<f32>,
     stereo_sample_buf: Vec<f32>,
     info: StreamInfo,
+    eof_reached: bool,
+}
+
+struct OpenedAudioStream {
+    format_reader: Box<dyn FormatReader>,
+    decoder: Box<dyn SymphoniaAudioDecoder>,
+    track_id: u32,
+    info: StreamInfo,
 }
 
 impl AudioDecoder {
     /// Open and probe an audio file.
     pub fn open<P: AsRef<Path>>(path: P) -> Result<Self> {
-        let file = File::open(path.as_ref())
+        let path_buf = path.as_ref().to_path_buf();
+        let opened = Self::open_reader_and_decoder(&path_buf)?;
+
+        Ok(Self {
+            path: path_buf,
+            format_reader: opened.format_reader,
+            decoder: opened.decoder,
+            track_id: opened.track_id,
+            raw_sample_buf: Vec::new(),
+            stereo_sample_buf: Vec::new(),
+            info: opened.info,
+            eof_reached: false,
+        })
+    }
+
+    fn open_reader_and_decoder(path: &Path) -> Result<OpenedAudioStream> {
+        let file = File::open(path)
             .map_err(|e| SonoraError::Audio(format!("Failed to open file: {e}")))?;
         let mss = MediaSourceStream::new(Box::new(file), Default::default());
 
         let mut hint = Hint::new();
-        if let Some(ext) = path.as_ref().extension().and_then(|s| s.to_str()) {
+        if let Some(ext) = path.extension().and_then(|s| s.to_str()) {
             hint.with_extension(ext);
         }
 
@@ -77,17 +102,17 @@ impl AudioDecoder {
             .make_audio_decoder(audio_params, &AudioDecoderOptions::default())
             .map_err(|e| SonoraError::Audio(format!("Failed to initialize decoder: {e}")))?;
 
-        Ok(Self {
+        let info = StreamInfo {
+            sample_rate,
+            channels,
+            duration_frames,
+        };
+
+        Ok(OpenedAudioStream {
             format_reader,
             decoder,
             track_id,
-            raw_sample_buf: Vec::new(),
-            stereo_sample_buf: Vec::new(),
-            info: StreamInfo {
-                sample_rate,
-                channels,
-                duration_frames,
-            },
+            info,
         })
     }
 
@@ -101,16 +126,59 @@ impl AudioDecoder {
         let nanos = ((position_ms % 1000) * 1_000_000) as u32;
         let time = Time::try_new(seconds, nanos).unwrap_or(Time::ZERO);
 
-        self.format_reader
-            .seek(
+        let seek_res = if self.eof_reached {
+            // Re-open fresh stream if EOF was reached to avoid container state exhaustion
+            match Self::open_reader_and_decoder(&self.path) {
+                Ok(opened) => {
+                    self.format_reader = opened.format_reader;
+                    self.decoder = opened.decoder;
+                    self.track_id = opened.track_id;
+                    self.info = opened.info;
+                    self.format_reader.seek(
+                        SeekMode::Accurate,
+                        SeekTo::Time {
+                            time,
+                            track_id: Some(self.track_id),
+                        },
+                    )
+                }
+                Err(e) => Err(SymphoniaError::IoError(std::io::Error::other(
+                    e.to_string(),
+                ))),
+            }
+        } else {
+            let res = self.format_reader.seek(
                 SeekMode::Accurate,
                 SeekTo::Time {
                     time,
                     track_id: Some(self.track_id),
                 },
-            )
-            .map_err(|e| SonoraError::Audio(format!("Seek error: {e}")))?;
+            );
+            if res.is_err() {
+                // Fallback: reopen from path and seek
+                if let Ok(opened) = Self::open_reader_and_decoder(&self.path) {
+                    self.format_reader = opened.format_reader;
+                    self.decoder = opened.decoder;
+                    self.track_id = opened.track_id;
+                    self.info = opened.info;
+                    self.format_reader.seek(
+                        SeekMode::Accurate,
+                        SeekTo::Time {
+                            time,
+                            track_id: Some(self.track_id),
+                        },
+                    )
+                } else {
+                    res
+                }
+            } else {
+                res
+            }
+        };
 
+        seek_res.map_err(|e| SonoraError::Audio(format!("Seek error: {e}")))?;
+
+        self.eof_reached = false;
         self.decoder.reset();
         self.raw_sample_buf.clear();
         self.stereo_sample_buf.clear();
@@ -122,9 +190,16 @@ impl AudioDecoder {
         loop {
             let packet = match self.format_reader.next_packet() {
                 Ok(Some(packet)) => packet,
-                Ok(None) => return Ok(None),
+                Ok(None) => {
+                    self.eof_reached = true;
+                    return Ok(None);
+                }
                 Err(SymphoniaError::ResetRequired) => {
                     self.decoder.reset();
+                    continue;
+                }
+                Err(SymphoniaError::DecodeError(msg)) => {
+                    tracing::warn!("Recoverable demuxer error: {msg}");
                     continue;
                 }
                 Err(e) => return Err(SonoraError::Audio(format!("Format reader error: {e}"))),

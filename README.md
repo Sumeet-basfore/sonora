@@ -65,7 +65,8 @@ Extract the archive and run directly:
 
 ## 🎵 Supported Formats
 
-FLAC, ALAC, WAV, AIFF, MP3, AAC/M4A, Ogg Vorbis, Opus — decoded with **Symphonia**, tagged with **Lofty**. Corrupted or unreadable files are logged and skipped safely without stopping library scans.
+FLAC, ALAC, WAV, AIFF, MP3, AAC/M4A, Ogg Vorbis — decoded with **Symphonia**, tagged with **Lofty**. Corrupted or unreadable files are logged and skipped safely without stopping library scans.
+
 
 ---
 

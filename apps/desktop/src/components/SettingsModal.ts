@@ -59,12 +59,13 @@ export class SettingsModalComponent {
         this.render();
         this.attachEventListeners();
       })
-      .catch((e) => {
+      .catch(() => {
         if (!this.isOpen) return;
-        this.marketplaceStatus = `Marketplace themes unavailable: ${String(e)}`;
+        this.marketplaceStatus = 'Marketplace themes are currently unavailable.';
         this.render();
         this.attachEventListeners();
       });
+
   }
 
   public close() {

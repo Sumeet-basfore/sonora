@@ -5486,6 +5486,7 @@ dependencies = [
  "sonora-lyrics",
  "sonora-plugin",
  "sonora-registry",
+ "symphonia",
  "tokio",
  "tracing",
  "wat",
