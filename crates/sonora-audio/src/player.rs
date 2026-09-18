@@ -176,7 +176,9 @@ impl AudioPlayer {
         let mut current_decoder: Option<AudioDecoder> = None;
         let mut resampler =
             LinearResampler::new(engine.sample_rate() as f32, engine.sample_rate() as f32);
-        let mut resample_out = vec![0.0f32; 4096];
+        let mut resample_out = vec![0.0f32; 8192];
+        let mut pending_buffer: Vec<f32> = Vec::with_capacity(16384);
+        let mut pending_offset: usize = 0;
         let mut eof_reached = false;
         let mut consecutive_errors: usize = 0;
 
@@ -209,6 +211,8 @@ impl AudioPlayer {
                             engine.set_playing(true);
                             eof_reached = false;
                             consecutive_errors = 0;
+                            pending_buffer.clear();
+                            pending_offset = 0;
 
                             {
                                 let mut s = shared.lock().unwrap();
@@ -259,6 +263,8 @@ impl AudioPlayer {
                                 engine.set_frames_played(target_frames);
                                 eof_reached = false;
                                 consecutive_errors = 0;
+                                pending_buffer.clear();
+                                pending_offset = 0;
                                 let mut s = shared.lock().unwrap();
                                 s.is_finished = false;
                             }
@@ -271,6 +277,8 @@ impl AudioPlayer {
                         engine.pause();
                         engine.flush();
                         current_decoder = None;
+                        pending_buffer.clear();
+                        pending_offset = 0;
                         let mut s = shared.lock().unwrap();
                         s.state = PlaybackState::Stopped;
                     }
@@ -280,28 +288,63 @@ impl AudioPlayer {
             // Decode and feed the ring buffer if playing
             if engine.is_playing() {
                 if let Some(decoder) = &mut current_decoder {
-                    if !eof_reached {
+                    // First, drain any pending samples from the previous decode/resample step
+                    if pending_offset < pending_buffer.len() {
+                        let available_slots = producer.slots();
+                        // Only push even number of samples to preserve stereo frame alignment
+                        let pairs_available = available_slots / 2;
+                        let remaining_pairs = (pending_buffer.len() - pending_offset) / 2;
+                        let pairs_to_push = pairs_available.min(remaining_pairs);
+
+                        if pairs_to_push > 0 {
+                            let samples_to_push = pairs_to_push * 2;
+                            for &s in
+                                &pending_buffer[pending_offset..pending_offset + samples_to_push]
+                            {
+                                let _ = producer.push(s);
+                            }
+                            pending_offset += samples_to_push;
+                        }
+                    }
+
+                    // If pending buffer is fully drained and EOF not reached, decode next packet
+                    if pending_offset >= pending_buffer.len() && !eof_reached {
                         if producer.slots() >= 1024 {
                             let in_rate = decoder.info().sample_rate;
                             match decoder.decode_next_stereo() {
                                 Ok(Some(stereo_samples)) => {
                                     consecutive_errors = 0;
-                                    let req_len = (stereo_samples.len() as f32
-                                        * (engine.sample_rate() as f32 / in_rate as f32)
-                                        + 256.0)
-                                        as usize;
+                                    let req_len = ((stereo_samples.len() as f32
+                                        * (engine.sample_rate() as f32 / in_rate as f32))
+                                        .ceil()
+                                        as usize
+                                        + 512)
+                                        .max(1024);
                                     if resample_out.len() < req_len {
                                         resample_out.resize(req_len, 0.0);
                                     }
 
                                     let frames_written = resampler
                                         .resample_stereo(stereo_samples, &mut resample_out);
-                                    let samples_to_push = frames_written * 2;
+                                    let samples_produced = frames_written * 2;
 
-                                    for &sample in &resample_out[..samples_to_push] {
-                                        if producer.push(sample).is_err() {
-                                            break;
+                                    pending_buffer.clear();
+                                    pending_buffer
+                                        .extend_from_slice(&resample_out[..samples_produced]);
+                                    pending_offset = 0;
+
+                                    // Push as many as fit immediately
+                                    let available_slots = producer.slots();
+                                    let pairs_available = available_slots / 2;
+                                    let remaining_pairs = samples_produced / 2;
+                                    let pairs_to_push = pairs_available.min(remaining_pairs);
+
+                                    if pairs_to_push > 0 {
+                                        let samples_to_push = pairs_to_push * 2;
+                                        for &s in &pending_buffer[..samples_to_push] {
+                                            let _ = producer.push(s);
                                         }
+                                        pending_offset = samples_to_push;
                                     }
                                 }
                                 Ok(None) => {
@@ -318,16 +361,21 @@ impl AudioPlayer {
                                 }
                             }
                         } else {
-                            std::thread::sleep(Duration::from_millis(5));
+                            std::thread::sleep(Duration::from_millis(2));
                         }
-                    } else if producer.slots() == DEFAULT_RING_BUFFER_CAPACITY {
-                        // All decoded samples played through CPAL
-                        engine.pause();
-                        let mut s = shared.lock().unwrap();
-                        s.state = PlaybackState::Stopped;
-                        s.is_finished = true;
+                    } else if eof_reached && pending_offset >= pending_buffer.len() {
+                        if producer.slots() == DEFAULT_RING_BUFFER_CAPACITY {
+                            // All decoded samples played through CPAL
+                            engine.pause();
+                            let mut s = shared.lock().unwrap();
+                            s.state = PlaybackState::Stopped;
+                            s.is_finished = true;
+                        } else {
+                            std::thread::sleep(Duration::from_millis(10));
+                        }
                     } else {
-                        std::thread::sleep(Duration::from_millis(10));
+                        // Pending buffer still has data but ring buffer is full; yield briefly
+                        std::thread::sleep(Duration::from_millis(2));
                     }
                 }
             }

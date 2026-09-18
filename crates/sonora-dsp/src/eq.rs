@@ -87,8 +87,15 @@ impl ParametricEqualizer {
             return sample;
         }
 
-        for band in &mut self.bands {
-            sample = band.process_sample(sample);
+        let all_flat = self.configs.iter().all(|c| c.gain_db.abs() < 1e-4);
+        if all_flat {
+            return sample;
+        }
+
+        for (i, band) in self.bands.iter_mut().enumerate() {
+            if self.configs[i].enabled && self.configs[i].gain_db.abs() >= 1e-4 {
+                sample = band.process_sample(sample);
+            }
         }
         sample
     }

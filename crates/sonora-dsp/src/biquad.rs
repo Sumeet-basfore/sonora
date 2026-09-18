@@ -30,9 +30,15 @@ impl BiquadCoefficients {
 
     /// Peaking EQ filter coefficients using Robert Bristow-Johnson Audio EQ Cookbook formulas.
     pub fn peaking_eq(sample_rate: f32, freq: f32, q: f32, gain_db: f32) -> Self {
+        if gain_db.abs() < 1e-4 {
+            return Self::identity();
+        }
+        let sample_rate = sample_rate.max(8000.0);
+        let safe_freq = freq.clamp(20.0, sample_rate * 0.49);
+        let safe_q = q.max(0.1);
         let a = 10.0f32.powf(gain_db / 40.0);
-        let w0 = 2.0 * std::f32::consts::PI * freq / sample_rate;
-        let alpha = w0.sin() / (2.0 * q);
+        let w0 = 2.0 * std::f32::consts::PI * safe_freq / sample_rate;
+        let alpha = w0.sin() / (2.0 * safe_q);
         let cos_w0 = w0.cos();
 
         let b0 = 1.0 + alpha * a;

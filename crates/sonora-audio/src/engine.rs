@@ -201,31 +201,28 @@ impl AudioEngine {
                 return;
             }
 
-            if channels == 2 {
-                for chunk in data.chunks_exact_mut(2) {
-                    let raw_l = consumer.pop().unwrap_or(0.0);
-                    let raw_r = consumer.pop().unwrap_or(0.0);
+            let num_channels = channels.max(1);
+            for chunk in data.chunks_exact_mut(num_channels) {
+                let raw_l = consumer.pop().unwrap_or(0.0);
+                let raw_r = consumer.pop().unwrap_or(0.0);
 
-                    let eq_l = eq_left.process_sample(raw_l);
-                    let eq_r = eq_right.process_sample(raw_r);
+                let eq_l = eq_left.process_sample(raw_l);
+                let eq_r = eq_right.process_sample(raw_r);
 
-                    let out_l = gain.process_sample(eq_l);
-                    let out_r = gain.process_sample(eq_r);
+                let out_l = gain.process_sample(eq_l);
+                let out_r = gain.process_sample(eq_r);
+
+                if num_channels == 1 {
+                    chunk[0] = (out_l + out_r) * 0.5;
+                } else {
                     chunk[0] = out_l;
                     chunk[1] = out_r;
-                    frames_played.fetch_add(1, Ordering::Relaxed);
-                    tap.push((out_l + out_r) * 0.5);
+                    for sample in &mut chunk[2..num_channels] {
+                        *sample = 0.0;
+                    }
                 }
-            } else {
-                // Mono or fallback
-                for sample in data.iter_mut() {
-                    let raw = consumer.pop().unwrap_or(0.0);
-                    let eq = eq_left.process_sample(raw);
-                    let out = gain.process_sample(eq);
-                    *sample = out;
-                    frames_played.fetch_add(1, Ordering::Relaxed);
-                    tap.push(out);
-                }
+                frames_played.fetch_add(1, Ordering::Relaxed);
+                tap.push((out_l + out_r) * 0.5);
             }
         })?;
 
