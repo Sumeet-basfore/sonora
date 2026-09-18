@@ -1,0 +1,60 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/sonora-common",
+    "crates/sonora-dsp",
+    "crates/sonora-audio",
+    "crates/sonora-library",
+    "crates/sonora-lyrics",
+    "crates/sonora-core",
+    "apps/cli",
+    "apps/tui",
+    "apps/desktop/src-tauri",
+    "tests",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Sonora Contributors"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/sonora-audio/sonora"
+
+[workspace.dependencies]
+# Internal workspace crates
+sonora-common = { path = "crates/sonora-common" }
+sonora-dsp = { path = "crates/sonora-dsp" }
+sonora-audio = { path = "crates/sonora-audio" }
+sonora-library = { path = "crates/sonora-library" }
+sonora-lyrics = { path = "crates/sonora-lyrics" }
+sonora-core = { path = "crates/sonora-core" }
+
+# Error handling & logging
+thiserror = "2.0"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
+
+# Async runtime (strictly for daemon/background tasks outside real-time audio)
+tokio = { version = "1.43", features = ["full"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Audio decoding & hardware I/O & lockless IPC
+symphonia = { version = "0.6", features = ["all"] }
+lofty = "0.25"
+cpal = "0.18"
+rtrb = "0.4"
+
+# Database & search
+rusqlite = { version = "0.40", features = ["bundled-full"] }
+
+# CLI & TUI frontends
+clap = { version = "4.6", features = ["derive"] }
+ratatui = "0.30"
+crossterm = "0.29"
+
+# Tauri 2
+tauri = { version = "2" }
+tauri-build = { version = "2" }
