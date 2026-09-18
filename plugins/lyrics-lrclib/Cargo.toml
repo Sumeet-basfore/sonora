@@ -1,0 +1,22 @@
+[package]
+name = "sonora-plugin-lrclib"
+version = "1.0.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+description = "Sonora WASM lyrics provider backed by the LRCLIB public API"
+repository = "https://github.com/sonora-audio/sonora"
+
+# Standalone crate: intentionally NOT a member of the Sonora workspace so
+# `cargo test --workspace` / clippy never build plugin sources for the host.
+[workspace]
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+[profile.release]
+opt-level = "s"
+lto = true

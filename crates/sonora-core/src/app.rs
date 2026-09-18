@@ -1,59 +1,632 @@
+//! Application facade: orchestration over subsystem services.
+//!
+//! [`SonoraApp`] owns no subsystem state directly. It composes
+//! [`LibraryService`], [`PlaybackService`], [`QueueService`],
+//! [`LyricsService`], and [`PluginHost`], all sharing one [`EventBus`].
+//! Cross-cutting flows ("play a library track") are orchestrated here using
+//! only the services' public APIs; subsystem-to-subsystem communication
+//! happens through [`SonoraEvent`]s on the bus, never through shared fields.
+//!
+//! Mutations can also enter through [`SonoraCommand`] via [`SonoraApp::handle_command`].
+
+use crate::bus::EventBus;
+use crate::command::SonoraCommand;
 use crate::config::SonoraConfig;
 use crate::event::SonoraEvent;
-use sonora_common::{Result, SonoraError};
-use sonora_library::Database;
-use std::sync::Arc;
+use crate::queue::QueueItem;
+use crate::services::{LibraryService, LyricsService, PlaybackService, QueueService};
+use crate::PlaybackQueue;
+use serde::{Deserialize, Serialize};
+use sonora_audio::AudioPlayer;
+use sonora_common::{PlaybackState, Result, SonoraError, TrackId};
+use sonora_library::{
+    AlbumDto, ArtistDto, ArtworkCache, Database, LibrarySummary, ScanStats, SearchResult,
+};
+use sonora_plugin::{PluginHost, PluginManifest};
+use sonora_registry::Marketplace;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use tokio::sync::broadcast;
 
-/// Primary application context orchestrating subsystems outside the real-time audio path.
+/// Consolidated status of the Sonora player and queue.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PlaybackStatus {
+    pub state: PlaybackState,
+    pub current_track: Option<QueueItem>,
+    pub position_ms: u64,
+    pub duration_ms: u64,
+    pub volume: f32,
+    pub queue_length: usize,
+    pub current_queue_index: Option<usize>,
+}
+
+/// Primary application context: service composition + command routing.
 pub struct SonoraApp {
     config: SonoraConfig,
     db: Arc<Database>,
-    event_tx: broadcast::Sender<SonoraEvent>,
+    bus: EventBus,
+    library: LibraryService,
+    playback: PlaybackService,
+    queue: QueueService,
+    lyrics: LyricsService,
+    plugins: Arc<PluginHost>,
+    marketplace: Marketplace,
 }
 
 impl SonoraApp {
-    /// Initialize the application context with configuration and SQLite storage.
+    fn assemble(config: SonoraConfig, db: Database, player: AudioPlayer) -> Result<Self> {
+        let db = Arc::new(db);
+        let player = Arc::new(player);
+        let queue_handle = Arc::new(Mutex::new(PlaybackQueue::new()));
+        let artwork_cache = Arc::new(ArtworkCache::new());
+        let plugins = Arc::new(PluginHost::new().map_err(sonora_common::SonoraError::from)?);
+        let bus = EventBus::default();
+        let marketplace = Marketplace::new(&config.data_dir, Arc::clone(&plugins), None, None)
+            .map_err(sonora_common::SonoraError::from)?;
+
+        let app = Self {
+            library: LibraryService::new(Arc::clone(&db), Arc::clone(&artwork_cache), bus.clone()),
+            playback: PlaybackService::new(Arc::clone(&player), bus.clone()),
+            queue: QueueService::new(Arc::clone(&queue_handle), bus.clone()),
+            lyrics: LyricsService::new(Arc::clone(&db), Arc::clone(&plugins), bus.clone()),
+            config,
+            db,
+            bus,
+            plugins,
+            marketplace,
+        };
+
+        app.playback
+            .player()
+            .set_volume(app.config.default_volume)
+            .map_err(|e| SonoraError::Audio(e.to_string()))?;
+        Ok(app)
+    }
+
+    /// Initialize the application context with configuration, SQLite storage, and audio player.
     pub fn new(config: SonoraConfig) -> Result<Self> {
         std::fs::create_dir_all(&config.data_dir)
             .map_err(|e| SonoraError::Config(format!("Failed to create data dir: {e}")))?;
 
         let db_path = config.data_dir.join("library.sqlite3");
         let db = Database::open(&db_path)?;
-        let (event_tx, _) = broadcast::channel(256);
-
-        Ok(Self {
-            config,
-            db: Arc::new(db),
-            event_tx,
-        })
+        let player = AudioPlayer::new().unwrap_or_else(|e| {
+            tracing::warn!(
+                "Hardware audio device unavailable ({e}), falling back to virtual audio output"
+            );
+            AudioPlayer::virtual_player(48000, 2).expect("virtual audio initialization")
+        });
+        Self::assemble(config, db, player)
     }
 
-    /// Initialize an in-memory application context (for tests and headless verification).
+    /// Initialize an in-memory application context with virtual audio (for tests and headless verification).
     pub fn in_memory(config: SonoraConfig) -> Result<Self> {
         let db = Database::in_memory()?;
-        let (event_tx, _) = broadcast::channel(256);
-
-        Ok(Self {
-            config,
-            db: Arc::new(db),
-            event_tx,
-        })
+        let player = AudioPlayer::virtual_player(48000, 2)?;
+        Self::assemble(config, db, player)
     }
+
+    // --- Composition accessors ---
 
     pub fn config(&self) -> &SonoraConfig {
         &self.config
     }
 
+    /// Direct database handle (compatibility for hosts that build their own
+    /// repositories, e.g. the desktop shell). New code should prefer the
+    /// service APIs and the event bus.
     pub fn db(&self) -> &Database {
         &self.db
     }
 
+    pub fn player(&self) -> &AudioPlayer {
+        self.playback.player()
+    }
+
+    pub fn queue(&self) -> &Arc<Mutex<PlaybackQueue>> {
+        self.queue.handle()
+    }
+
+    pub fn plugin_host(&self) -> &Arc<PluginHost> {
+        &self.plugins
+    }
+
+    pub fn marketplace(&self) -> &Marketplace {
+        &self.marketplace
+    }
+
+    pub fn event_bus(&self) -> &EventBus {
+        &self.bus
+    }
+
     pub fn subscribe_events(&self) -> broadcast::Receiver<SonoraEvent> {
-        self.event_tx.subscribe()
+        self.bus.subscribe()
     }
 
     pub fn broadcast_event(&self, event: SonoraEvent) {
-        let _ = self.event_tx.send(event);
+        self.bus.publish(event);
+    }
+
+    /// Forward pending [`PluginHost`] lifecycle transitions onto the event
+    /// bus as `PluginStateChanged`. Called automatically after every plugin
+    /// command; UI loops may also poll it.
+    pub fn forward_plugin_events(&self) {
+        for e in self.plugins.drain_events() {
+            self.bus.publish(SonoraEvent::PluginStateChanged {
+                plugin_id: e.plugin_id,
+                from: e.from.to_string(),
+                to: e.to.to_string(),
+            });
+        }
+    }
+
+    // --- Command plane ---
+
+    /// Route a control-plane mutation to its owning service.
+    pub fn handle_command(&self, command: SonoraCommand) -> Result<()> {
+        match command {
+            SonoraCommand::PlayFile(path) => self.play_file(path),
+            SonoraCommand::PlayTrack(id) => self.play_track_id(id),
+            SonoraCommand::PlayAlbum(id) => self.play_album(id),
+            SonoraCommand::PlayQueueIndex(i) => self.play_queue_index(i),
+            SonoraCommand::Pause => self.pause(),
+            SonoraCommand::Resume => self.resume(),
+            SonoraCommand::Stop => self.stop(),
+            SonoraCommand::Seek(ms) => self.seek(ms),
+            SonoraCommand::SetVolume(v) => self.set_volume(v),
+            SonoraCommand::QueueNext => self.queue_next().map(|_| ()),
+            SonoraCommand::QueuePrevious => self.queue_previous().map(|_| ()),
+            SonoraCommand::EnqueueTrack(id) => self.enqueue_track(id),
+            SonoraCommand::RemoveFromQueue(i) => self.remove_from_queue(i).map(|_| ()),
+            SonoraCommand::MoveQueueItem { from, to } => self.move_queue_item(from, to).map(|_| ()),
+            SonoraCommand::ClearQueue => {
+                self.clear_queue();
+                Ok(())
+            }
+            SonoraCommand::ScanDirectory(path) => self.scan_directory(path).map(|_| ()),
+            SonoraCommand::PluginRegister { manifest, dir } => {
+                self.register_plugin(*manifest, dir)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::PluginLoad { id } => {
+                self.plugins.load(&id).map_err(SonoraError::from)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::PluginLoadBytes { id, wasm } => {
+                self.plugins
+                    .load_bytes(&id, &wasm)
+                    .map_err(SonoraError::from)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::PluginStart { id } => {
+                self.plugins.start(&id).map_err(SonoraError::from)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::PluginStop { id } => {
+                self.plugins.stop(&id).map_err(SonoraError::from)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::PluginUnload { id } => {
+                self.plugins.unload(&id).map_err(SonoraError::from)?;
+                self.forward_plugin_events();
+                Ok(())
+            }
+            SonoraCommand::RegistryRefresh => self.market_refresh().map(|_| ()),
+            SonoraCommand::MarketInstall { id, version } => {
+                self.market_install(&id, version.as_deref()).map(|_| ())
+            }
+            SonoraCommand::MarketUpdate { id } => self.market_update(&id).map(|_| ()),
+            SonoraCommand::MarketRollback { id, version } => {
+                self.market_rollback(&id, version.as_deref()).map(|_| ())
+            }
+            SonoraCommand::MarketUninstall { id } => self.market_uninstall(&id),
+            SonoraCommand::MarketSetActiveTheme { id } => {
+                self.market_set_active_theme(id.as_deref())
+            }
+        }
+    }
+
+    // --- Plugin orchestration ---
+
+    /// Register a validated manifest (discover-equivalent for explicit bytes).
+    pub fn register_plugin(&self, manifest: PluginManifest, dir: PathBuf) -> Result<()> {
+        self.plugins
+            .register(manifest, dir)
+            .map_err(SonoraError::from)?;
+        self.forward_plugin_events();
+        Ok(())
+    }
+
+    /// Discover plugin directories under `dir` (validate-only; use
+    /// [`SonoraCommand::PluginLoad`] to instantiate).
+    pub fn discover_plugins(&self, dir: &Path) -> Vec<String> {
+        let ids = self.plugins.discover(dir);
+        self.forward_plugin_events();
+        ids
+    }
+
+    // --- Marketplace (delegated to the registry service) ---
+
+    /// Refresh the registry index from the network.
+    pub fn market_refresh(&self) -> Result<sonora_registry::Catalog> {
+        self.marketplace.refresh().map_err(SonoraError::from)
+    }
+
+    /// Catalog with offline fallback to the last validated cache.
+    pub fn market_catalog(&self) -> Result<sonora_registry::Catalog> {
+        self.marketplace.catalog().map_err(SonoraError::from)
+    }
+
+    /// Installed extensions merged with live host state.
+    pub fn market_installed(&self) -> Result<Vec<sonora_registry::InstalledEntry>> {
+        self.marketplace.installed().map_err(SonoraError::from)
+    }
+
+    /// Available updates for installed extensions.
+    pub fn market_updates(&self) -> Result<Vec<sonora_registry::UpdateInfo>> {
+        self.marketplace.updates().map_err(SonoraError::from)
+    }
+
+    pub fn market_install(
+        &self,
+        id: &str,
+        version: Option<&str>,
+    ) -> Result<sonora_registry::InstallReport> {
+        let report = self
+            .marketplace
+            .install(id, version)
+            .map_err(SonoraError::from)?;
+        self.forward_plugin_events();
+        Ok(report)
+    }
+
+    pub fn market_update(&self, id: &str) -> Result<sonora_registry::InstallReport> {
+        let report = self.marketplace.update(id).map_err(SonoraError::from)?;
+        self.forward_plugin_events();
+        Ok(report)
+    }
+
+    pub fn market_rollback(
+        &self,
+        id: &str,
+        version: Option<&str>,
+    ) -> Result<sonora_registry::RollbackReport> {
+        let report = self
+            .marketplace
+            .rollback(id, version)
+            .map_err(SonoraError::from)?;
+        self.forward_plugin_events();
+        Ok(report)
+    }
+
+    pub fn market_uninstall(&self, id: &str) -> Result<()> {
+        self.marketplace.uninstall(id).map_err(SonoraError::from)?;
+        self.forward_plugin_events();
+        Ok(())
+    }
+
+    /// Installed, validated themes for the theme selector.
+    pub fn market_themes(&self) -> Result<Vec<sonora_registry::InstalledTheme>> {
+        self.marketplace
+            .installed_themes()
+            .map_err(SonoraError::from)
+    }
+
+    /// Full validated definition of one installed theme.
+    pub fn market_theme_definition(&self, id: &str) -> Result<sonora_registry::ThemeDefinition> {
+        self.marketplace
+            .theme_definition(id)
+            .map_err(SonoraError::from)
+    }
+
+    /// Supplemental stylesheet of one installed theme, if any.
+    pub fn market_theme_css(&self, id: &str) -> Result<Option<String>> {
+        self.marketplace.theme_css(id).map_err(SonoraError::from)
+    }
+
+    /// Persisted marketplace theme selection (`None` = built-in default).
+    pub fn market_active_theme(&self) -> Result<Option<String>> {
+        self.marketplace.active_theme().map_err(SonoraError::from)
+    }
+
+    pub fn market_set_active_theme(&self, id: Option<&str>) -> Result<()> {
+        self.marketplace
+            .set_active_theme(id)
+            .map_err(SonoraError::from)
+    }
+
+    // --- Library Operations (delegated) ---
+
+    /// Scan a directory recursively, extracting metadata with Lofty and indexing into SQLite.
+    pub fn scan_directory<P: AsRef<Path>>(&self, path: P) -> Result<ScanStats> {
+        self.library.scan_directory(path)
+    }
+
+    /// Search library tracks using FTS5 trigram full-text query.
+    pub fn search(&self, query: &str, limit: usize) -> Result<Vec<SearchResult>> {
+        self.library.search(query, limit)
+    }
+
+    pub fn get_all_tracks(&self, limit: usize) -> Result<Vec<SearchResult>> {
+        self.library.get_all_tracks(limit)
+    }
+
+    pub fn get_all_albums(&self) -> Result<Vec<AlbumDto>> {
+        self.library.get_all_albums()
+    }
+
+    pub fn get_all_artists(&self) -> Result<Vec<ArtistDto>> {
+        self.library.get_all_artists()
+    }
+
+    pub fn get_album_tracks(&self, album_id: i64) -> Result<Vec<SearchResult>> {
+        self.library.get_album_tracks(album_id)
+    }
+
+    pub fn get_artist_tracks(&self, artist_id: i64) -> Result<Vec<SearchResult>> {
+        self.library.get_artist_tracks(artist_id)
+    }
+
+    pub fn get_track_artwork(&self, track_id: TrackId, thumbnail: bool) -> Result<Option<String>> {
+        self.library.get_track_artwork(track_id, thumbnail)
+    }
+
+    pub fn get_album_artwork(&self, album_id: i64, thumbnail: bool) -> Result<Option<String>> {
+        self.library.get_album_artwork(album_id, thumbnail)
+    }
+
+    pub fn get_library_summary(&self) -> Result<LibrarySummary> {
+        self.library.get_library_summary()
+    }
+
+    // --- Playback Operations (orchestrated) ---
+
+    /// Open and play an audio track by file path.
+    pub fn play_file<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let p = path.as_ref();
+        if !p.exists() {
+            return Err(SonoraError::Audio(format!(
+                "File does not exist: {}",
+                p.display()
+            )));
+        }
+
+        let queue_item = QueueItem {
+            track_id: None,
+            file_path: p.to_path_buf(),
+            title: p
+                .file_stem()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_default(),
+            artist: None,
+            album: None,
+            duration_ms: 0,
+        };
+        self.queue.replace(vec![queue_item], 0);
+        self.playback.play_file(p)
+    }
+
+    /// Open and play a track from the library by its TrackId.
+    pub fn play_track_id(&self, track_id: TrackId) -> Result<()> {
+        let details = self
+            .library
+            .get_track_details(track_id)?
+            .ok_or_else(|| SonoraError::Library(format!("Track ID {track_id:?} not found")))?;
+
+        let queue_item = QueueItem {
+            track_id: Some(details.track_id),
+            file_path: PathBuf::from(&details.file_path),
+            title: details.title.clone(),
+            artist: details.artist_name.clone(),
+            album: details.album_title.clone(),
+            duration_ms: details.duration_ms as u64,
+        };
+        self.queue.replace(vec![queue_item], 0);
+        self.playback.play_file(&details.file_path)?;
+        self.playback.announce_track(
+            track_id,
+            details.title,
+            details.artist_name,
+            details.duration_ms as u64,
+        );
+        Ok(())
+    }
+
+    pub fn pause(&self) -> Result<()> {
+        self.playback.pause()
+    }
+
+    pub fn resume(&self) -> Result<()> {
+        self.playback.resume()
+    }
+
+    pub fn stop(&self) -> Result<()> {
+        self.playback.stop()
+    }
+
+    pub fn seek(&self, position_ms: u64) -> Result<()> {
+        self.playback.seek(position_ms)
+    }
+
+    pub fn set_volume(&self, volume: f32) -> Result<()> {
+        self.playback.set_volume(volume)
+    }
+
+    pub fn volume(&self) -> f32 {
+        self.playback.volume()
+    }
+
+    pub fn playback_state(&self) -> PlaybackState {
+        self.playback.state()
+    }
+
+    // --- Queue Management (orchestrated) ---
+
+    pub fn enqueue_track(&self, track_id: TrackId) -> Result<()> {
+        let details = self
+            .library
+            .get_track_details(track_id)?
+            .ok_or_else(|| SonoraError::Library(format!("Track ID {track_id:?} not found")))?;
+
+        self.queue.enqueue(QueueItem {
+            track_id: Some(details.track_id),
+            file_path: PathBuf::from(&details.file_path),
+            title: details.title,
+            artist: details.artist_name,
+            album: details.album_title,
+            duration_ms: details.duration_ms as u64,
+        });
+        Ok(())
+    }
+
+    pub fn queue_next(&self) -> Result<bool> {
+        match self.queue.next() {
+            Some(item) => {
+                self.playback.play_file(&item.file_path)?;
+                if let Some(tid) = item.track_id {
+                    self.playback
+                        .announce_track(tid, item.title, item.artist, item.duration_ms);
+                }
+                Ok(true)
+            }
+            None => {
+                self.playback.stop()?;
+                Ok(false)
+            }
+        }
+    }
+
+    pub fn queue_previous(&self) -> Result<bool> {
+        // Standard player behavior: if song played for > 3s, seek to 0:00
+        if self.playback.position_ms() > 3000 {
+            self.playback.seek(0)?;
+            return Ok(true);
+        }
+
+        match self.queue.previous() {
+            Some(item) => {
+                self.playback.play_file(&item.file_path)?;
+                if let Some(tid) = item.track_id {
+                    self.playback
+                        .announce_track(tid, item.title, item.artist, item.duration_ms);
+                }
+                Ok(true)
+            }
+            None => {
+                // At start of queue; seek back to beginning of track
+                self.playback.seek(0)?;
+                Ok(false)
+            }
+        }
+    }
+
+    /// Check if current track finished and advance queue if more items exist.
+    pub fn poll_queue(&self) -> Result<()> {
+        if self.playback.is_finished() {
+            let _ = self.queue_next()?;
+        }
+        Ok(())
+    }
+
+    pub fn status(&self) -> PlaybackStatus {
+        let snap = self.playback.snapshot();
+        PlaybackStatus {
+            state: snap.state,
+            current_track: self.queue.current(),
+            position_ms: snap.position_ms,
+            duration_ms: snap.duration_ms,
+            volume: snap.volume,
+            queue_length: self.queue.len(),
+            current_queue_index: self.queue.current_index(),
+        }
+    }
+
+    pub fn play_album(&self, album_id: i64) -> Result<()> {
+        let tracks = self.library.get_album_tracks(album_id)?;
+        if tracks.is_empty() {
+            return Ok(());
+        }
+
+        let queue_items: Vec<QueueItem> = tracks
+            .iter()
+            .map(|t| QueueItem {
+                track_id: Some(t.track_id),
+                file_path: PathBuf::from(&t.file_path),
+                title: t.title.clone(),
+                artist: t.artist_name.clone(),
+                album: t.album_title.clone(),
+                duration_ms: t.duration_ms as u64,
+            })
+            .collect();
+
+        let first = queue_items[0].clone();
+        self.queue.replace(queue_items, 0);
+        self.playback.play_file(&first.file_path)?;
+        if let Some(tid) = first.track_id {
+            self.playback
+                .announce_track(tid, first.title, first.artist, first.duration_ms);
+        } else {
+            self.bus
+                .publish(SonoraEvent::PlaybackStateChanged(PlaybackState::Playing));
+        }
+        Ok(())
+    }
+
+    pub fn get_queue(&self) -> Vec<QueueItem> {
+        self.queue.items()
+    }
+
+    pub fn remove_from_queue(&self, index: usize) -> Result<Option<QueueItem>> {
+        Ok(self.queue.remove(index))
+    }
+
+    pub fn move_queue_item(&self, from: usize, to: usize) -> Result<bool> {
+        Ok(self.queue.move_item(from, to))
+    }
+
+    pub fn play_queue_index(&self, index: usize) -> Result<()> {
+        if let Some(item) = self.queue.set_current_index(index) {
+            self.playback.play_file(&item.file_path)?;
+            if let Some(tid) = item.track_id {
+                self.playback
+                    .announce_track(tid, item.title, item.artist, item.duration_ms);
+            } else {
+                self.bus
+                    .publish(SonoraEvent::PlaybackStateChanged(PlaybackState::Playing));
+            }
+        }
+        Ok(())
+    }
+
+    pub fn clear_queue(&self) {
+        self.queue.clear();
+    }
+
+    pub fn visualizer_data(&self) -> Vec<f32> {
+        self.playback.visualizer_data()
+    }
+
+    /// Retrieve lyrics for a track, checking SQLite cache first and cascading through providers on cache miss.
+    pub fn get_lyrics(
+        &self,
+        query: sonora_lyrics::provider::TrackLyricsQuery,
+    ) -> Result<Option<sonora_lyrics::model::LyricsDocument>> {
+        self.lyrics.get_lyrics(query)
+    }
+
+    /// Save manual offset adjustment to SQLite cache.
+    pub fn save_lyrics_offset(
+        &self,
+        track_id: Option<i64>,
+        file_path: Option<&str>,
+        offset_ms: i64,
+    ) -> Result<()> {
+        self.lyrics
+            .save_lyrics_offset(track_id, file_path, offset_ms)
     }
 }

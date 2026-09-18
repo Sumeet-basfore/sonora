@@ -1,0 +1,106 @@
+/* Sonora Design System - Semantic Design Tokens */
+:root {
+  /* --- Colors: Surfaces & Canvas --- */
+  --bg-base: #0c0d11;
+  --bg-surface: #14161d;
+  --bg-surface-hover: #191c25;
+  --bg-elevated: #1b1e28;
+  --bg-card: #161922;
+  --bg-card-hover: #222634;
+  --bg-active: #282d3d;
+  --bg-glass: rgba(20, 22, 29, 0.85);
+
+  /* --- Colors: Accents & Brand --- */
+  --accent-primary: #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-primary-active: #4338ca;
+  --accent-secondary: #a855f7;
+  --accent-secondary-hover: #9333ea;
+  --accent-glow: rgba(99, 102, 241, 0.25);
+  --accent-subtle: rgba(99, 102, 241, 0.12);
+
+  /* --- Colors: Content & Typography --- */
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-disabled: #475569;
+  --text-inverse: #0f172a;
+
+  /* --- Colors: Borders & Separators --- */
+  --border-subtle: #242936;
+  --border-medium: #333a4c;
+  --border-focus: #6366f1;
+  --border-active: #818cf8;
+
+  /* --- Colors: Semantic States --- */
+  --state-success: #10b981;
+  --state-warning: #f59e0b;
+  --state-danger: #ef4444;
+  --state-info: #3b82f6;
+
+  /* --- Typography --- */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", Helvetica, Arial, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+
+  --text-2xs: 10px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 32px;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+
+  /* --- Spacing --- */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-1-5: 6px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* --- Radii --- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* --- Shadows --- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 16px 36px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.35);
+
+  /* --- Motion & Transitions --- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* --- Dimensions --- */
+  --sidebar-width: 240px;
+  --playback-bar-height: 84px;
+  --header-height: 60px;
+  --queue-width: 320px;
+}

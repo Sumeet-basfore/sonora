@@ -1,0 +1,33 @@
+/* Sonora Retro — supplemental CRT texture.
+ *
+ * theme.json carries the full palette; this file adds only what tokens
+ * cannot express: faint scanlines and a soft vignette over the whole
+ * viewport. No remote fetches, no imports, no scripts — by construction.
+ * The overlay is pointer-transparent and sits above content like glass.
+ */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0px,
+    rgba(0, 0, 0, 0) 2px,
+    rgba(0, 0, 0, 0.16) 3px
+  );
+  z-index: 9999;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(0, 0, 0, 0) 55%,
+    rgba(8, 5, 1, 0.42) 100%
+  );
+  z-index: 9998;
+}

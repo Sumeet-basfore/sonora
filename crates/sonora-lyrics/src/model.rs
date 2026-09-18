@@ -27,11 +27,35 @@ pub struct LyricLine {
 }
 
 /// Universal AST representation of parsed lyrics.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct LyricsDocument {
     pub title: Option<String>,
     pub artist: Option<String>,
     pub album: Option<String>,
     pub offset_ms: i64,
+    pub format: LyricsFormat,
     pub lines: Vec<LyricLine>,
+}
+
+impl Default for LyricsDocument {
+    fn default() -> Self {
+        Self {
+            title: None,
+            artist: None,
+            album: None,
+            offset_ms: 0,
+            format: LyricsFormat::Plain,
+            lines: Vec::new(),
+        }
+    }
+}
+
+impl LyricsDocument {
+    pub fn is_synced(&self) -> bool {
+        self.format != LyricsFormat::Plain
+            && self
+                .lines
+                .iter()
+                .any(|l| l.start_time_ms > 0 || l.end_time_ms.is_some())
+    }
 }

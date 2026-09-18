@@ -1,0 +1,10 @@
+/* Neon Night — sample Sonora theme (v0 theme package: styling only, no code). */
+:root {
+  --bg-canvas: #0b0e1a;
+  --bg-panel: #141a2e;
+  --accent-primary: #00f0ff;
+  --accent-secondary: #ff2fb3;
+  --text-primary: #eaf2ff;
+  --text-muted: #8b93b0;
+  --panel-border: #232c4d;
+}

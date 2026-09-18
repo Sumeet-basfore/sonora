@@ -1,0 +1,16 @@
+{
+  "$schema": "https://sonora.audio/schemas/v1/plugin-manifest.json",
+  "id": "org.sonora.lyrics_genius",
+  "name": "Genius Lyrics Provider",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sonora Contributors",
+    "url": "https://github.com/sonora-audio/sonora"
+  },
+  "description": "Resolves lyrics from Genius public web endpoints (search API plus song pages) through the sandboxed host network API. No API token, no filesystem, no direct sockets; scrapes read-only and attributes every answer.",
+  "license": "MIT",
+  "api_version": 1,
+  "capabilities": ["lyrics:provider", "network:fetch"],
+  "entry": "plugin.wasm",
+  "allowed_domains": ["https://genius.com"]
+}

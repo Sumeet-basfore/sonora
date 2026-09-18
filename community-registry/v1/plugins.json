@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "plugins": [
+    {
+      "id": "org.sonora.lrclib",
+      "name": "LRCLIB Lyrics Provider",
+      "description": "Resolves plain and line-synced lyrics from the LRCLIB public API (lrclib.net) through the sandboxed host network API.",
+      "author": {
+        "name": "Sonora Contributors",
+        "url": "https://github.com/sonora-audio/sonora"
+      },
+      "category": "lyrics",
+      "homepage": "https://lrclib.net",
+      "capabilities": [
+        "lyrics:provider",
+        "network:fetch"
+      ],
+      "api_version": 1,
+      "min_sonora_version": "0.1.0",
+      "latest_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "download_url": "https://github.com/sonora-audio/community-registry/releases/download/org.sonora.lrclib-v1.0.0/org.sonora.lrclib-1.0.0.zip",
+          "sha256": "d2532a1d2c317909f0dd741f4cd18da94a3f2257f377bd9d1f7cf0bb037b7e25",
+          "size_bytes": 53231,
+          "changelog": "Initial release: LRCLIB synced/plain lyrics with rate-limit and timeout handling."
+        }
+      ]
+    },
+    {
+      "id": "org.sonora.spectrum_plus",
+      "name": "Spectrum+ Visualizer",
+      "description": "Advanced spectrum visualizer over the read-only audio tap: bars, wave, and mirror modes with peak normalization and release smoothing. No network, no filesystem, no output access.",
+      "author": {
+        "name": "Sonora Contributors",
+        "url": "https://github.com/sonora-audio/sonora"
+      },
+      "category": "visualizer",
+      "capabilities": [
+        "visualizer:tap"
+      ],
+      "api_version": 1,
+      "min_sonora_version": "0.1.0",
+      "latest_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "download_url": "https://github.com/sonora-audio/community-registry/releases/download/org.sonora.spectrum_plus-v1.0.0/org.sonora.spectrum_plus-1.0.0.zip",
+          "sha256": "e0ba4fd206619017af90c299ba46de074d60bbeeadc0452c8f38fa70ebbdd74a",
+          "size_bytes": 16485,
+          "changelog": "Initial release: bars/wave/mirror modes with smoothing over the audio tap."
+        }
+      ]
+    },
+    {
+      "id": "org.sonora.lyrics_genius",
+      "name": "Genius Lyrics Provider",
+      "description": "Resolves lyrics from Genius public web endpoints (search API plus song pages) through the sandboxed host network API, with attribution on every answer.",
+      "author": {
+        "name": "Sonora Contributors",
+        "url": "https://github.com/sonora-audio/sonora"
+      },
+      "category": "lyrics",
+      "homepage": "https://genius.com",
+      "capabilities": [
+        "lyrics:provider",
+        "network:fetch"
+      ],
+      "api_version": 1,
+      "min_sonora_version": "0.1.0",
+      "latest_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "download_url": "https://github.com/sonora-audio/community-registry/releases/download/org.sonora.lyrics_genius-v1.0.0/org.sonora.lyrics_genius-1.0.0.zip",
+          "sha256": "23e3a0f41e4a0ebb2a0c86d9b99d6da11da84328c4f17f151e1685bd7f01b928",
+          "size_bytes": 62379,
+          "changelog": "Initial release: metadata-based Genius lookup with strict markup parsing and graceful fallback."
+        }
+      ]
+    }
+  ]
+}

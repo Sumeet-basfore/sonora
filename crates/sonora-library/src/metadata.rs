@@ -40,7 +40,9 @@ impl MetadataExtractor {
         let bit_depth = properties.bit_depth();
         let bitrate_kbps = properties.audio_bitrate();
 
-        let tag = tagged_file.primary_tag().or_else(|| tagged_file.first_tag());
+        let tag = tagged_file
+            .primary_tag()
+            .or_else(|| tagged_file.first_tag());
 
         let mut meta = ExtractedMetadata {
             duration_ms,

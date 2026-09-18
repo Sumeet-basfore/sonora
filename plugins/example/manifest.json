@@ -1,0 +1,16 @@
+{
+  "$schema": "https://sonora.audio/schemas/v1/plugin-manifest.json",
+  "id": "org.sonora.example.lyrics",
+  "name": "Example Lyrics Provider",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sonora Contributors",
+    "url": "https://github.com/sonora-audio/sonora"
+  },
+  "description": "Minimal WASM lyrics provider. Always answers with a static two-line LRC payload; demonstrates the manifest, the sonora.log boundary, and the lyrics_fetch ABI.",
+  "license": "MIT",
+  "api_version": 1,
+  "capabilities": ["lyrics:provider"],
+  "entry": "plugin.wasm",
+  "allowed_domains": []
+}

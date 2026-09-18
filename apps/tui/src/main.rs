@@ -27,18 +27,18 @@ async fn main() -> Result<()> {
     let _app = SonoraApp::in_memory(config)?;
 
     // Terminal setup
-    enable_raw_mode().map_err(|e| SonoraError::Io(e))?;
+    enable_raw_mode().map_err(SonoraError::Io)?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen).map_err(|e| SonoraError::Io(e))?;
+    execute!(stdout, EnterAlternateScreen).map_err(SonoraError::Io)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend).map_err(|e| SonoraError::Io(e))?;
+    let mut terminal = Terminal::new(backend).map_err(SonoraError::Io)?;
 
     let res = run_tui(&mut terminal).await;
 
     // Terminal teardown
-    disable_raw_mode().map_err(|e| SonoraError::Io(e))?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen).map_err(|e| SonoraError::Io(e))?;
-    terminal.show_cursor().map_err(|e| SonoraError::Io(e))?;
+    disable_raw_mode().map_err(SonoraError::Io)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen).map_err(SonoraError::Io)?;
+    terminal.show_cursor().map_err(SonoraError::Io)?;
 
     res
 }
@@ -77,15 +77,16 @@ async fn run_tui(terminal: &mut Terminal<CrosstermBackend<io::Stdout>>) -> Resul
                 .block(Block::default().borders(Borders::ALL).title("Status"));
                 f.render_widget(body, chunks[1]);
 
-                let footer = Paragraph::new("Controls: [q/Esc] Quit | [/] Search | [Space] Play/Pause")
-                    .style(Style::default().fg(Color::DarkGray))
-                    .block(Block::default().borders(Borders::ALL));
+                let footer =
+                    Paragraph::new("Controls: [q/Esc] Quit | [/] Search | [Space] Play/Pause")
+                        .style(Style::default().fg(Color::DarkGray))
+                        .block(Block::default().borders(Borders::ALL));
                 f.render_widget(footer, chunks[2]);
             })
-            .map_err(|e| SonoraError::Io(e))?;
+            .map_err(SonoraError::Io)?;
 
-        if event::poll(Duration::from_millis(100)).map_err(|e| SonoraError::Io(e))? {
-            if let Event::Key(key) = event::read().map_err(|e| SonoraError::Io(e))? {
+        if event::poll(Duration::from_millis(100)).map_err(SonoraError::Io)? {
+            if let Event::Key(key) = event::read().map_err(SonoraError::Io)? {
                 match key.code {
                     KeyCode::Char('q') | KeyCode::Esc => return Ok(()),
                     _ => {}

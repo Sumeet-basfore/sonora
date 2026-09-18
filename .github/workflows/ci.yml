@@ -28,6 +28,9 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: clippy, rustfmt
 
       - name: Setup Rust cache
         uses: Swatinem/rust-cache@v2
@@ -41,6 +44,25 @@ jobs:
         run: |
           npm --prefix apps/desktop install
           npm --prefix apps/desktop run build
+
+      - name: Frontend tests
+        run: npm --prefix apps/desktop test
+
+      - name: Rust fmt check
+        run: cargo fmt --all -- --check
+
+      - name: Cargo clippy (deny warnings)
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Build first-party plugin artifacts
+        run: |
+          ./plugins/spectrum-plus/build.sh
+          ./plugins/lyrics-genius/build.sh
+
+      - name: Rebuild deterministic registry
+        run: |
+          python3 community-registry/tools/build.py
+          git diff --exit-code -- community-registry/v1 community-registry/packages || (echo "registry artifacts not reproducible; rerun tools/build.py and commit" && exit 1)
 
       - name: Cargo check workspace
         run: cargo check --workspace --all-targets

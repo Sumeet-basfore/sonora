@@ -15,6 +15,12 @@ pub enum SonoraError {
     #[error("Lyrics error: {0}")]
     Lyrics(String),
 
+    #[error("Plugin error: {0}")]
+    Plugin(String),
+
+    #[error("Marketplace error: {0}")]
+    Marketplace(String),
+
     #[error("Database error: {0}")]
     Database(String),
 

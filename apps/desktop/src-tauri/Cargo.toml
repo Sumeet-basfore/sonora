@@ -10,9 +10,14 @@ tauri-build.workspace = true
 
 [dependencies]
 sonora-core.workspace = true
+sonora-plugin.workspace = true
+sonora-registry.workspace = true
+sonora-library.workspace = true
 sonora-common.workspace = true
 tauri.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 tokio.workspace = true
 tracing.workspace = true
+rfd = "0.15"
+sonora-lyrics.workspace = true

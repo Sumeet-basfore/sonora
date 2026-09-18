@@ -25,8 +25,9 @@ impl Database {
 
     /// Open an in-memory SQLite database (primarily for testing and benchmarks).
     pub fn in_memory() -> Result<Self> {
-        let conn = Connection::open_in_memory()
-            .map_err(|e| SonoraError::Database(format!("Failed to open in-memory database: {e}")))?;
+        let conn = Connection::open_in_memory().map_err(|e| {
+            SonoraError::Database(format!("Failed to open in-memory database: {e}"))
+        })?;
 
         Self::configure(&conn)?;
         Self::migrate(&conn)?;

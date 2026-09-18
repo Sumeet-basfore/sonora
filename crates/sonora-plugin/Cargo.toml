@@ -1,0 +1,21 @@
+[package]
+name = "sonora-plugin"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+sonora-common.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+wasmtime.workspace = true
+semver.workspace = true
+# Blocking HTTP without a Tokio runtime: safe to create/drop in any context
+# (reqwest::blocking owns a runtime and panics if dropped inside async code).
+ureq = { version = "2", default-features = true }
+
+[dev-dependencies]
+wat.workspace = true

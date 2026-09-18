@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "themes": [
+    {
+      "id": "org.sonora.theme.neon_night",
+      "name": "Neon Night",
+      "description": "Dark theme with neon cyan/magenta accents. Styling only \u2014 no code runs.",
+      "author": {
+        "name": "Sonora Contributors"
+      },
+      "category": "dark",
+      "min_sonora_version": "0.1.0",
+      "latest_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "download_url": "https://github.com/sonora-audio/community-registry/releases/download/org.sonora.theme.neon_night-v1.0.0/org.sonora.theme.neon_night-1.0.0.zip",
+          "sha256": "e4d77b72551ccb30fd0b8688b53063c152c0e2750b068bb88716abd49e61ea67",
+          "size_bytes": 939,
+          "changelog": "Initial release."
+        }
+      ]
+    },
+    {
+      "id": "org.sonora.theme.retro",
+      "name": "Sonora Retro",
+      "description": "Amber-phosphor CRT terminal aesthetic: warm near-black surfaces, glowing amber accents, and a scanline/vignette texture. Styling only \u2014 no code runs.",
+      "author": {
+        "name": "Sonora Contributors"
+      },
+      "category": "dark",
+      "min_sonora_version": "0.1.0",
+      "latest_version": "1.0.0",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "download_url": "https://github.com/sonora-audio/community-registry/releases/download/org.sonora.theme.retro-v1.0.0/org.sonora.theme.retro-1.0.0.zip",
+          "sha256": "a1363247130ec9c2c1e61cf9416d37b07c9507c3b60badf74e29ee15b2d2a2ce",
+          "size_bytes": 1181,
+          "changelog": "Initial release."
+        }
+      ]
+    }
+  ]
+}

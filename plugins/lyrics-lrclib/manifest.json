@@ -1,0 +1,16 @@
+{
+  "$schema": "https://sonora.audio/schemas/v1/plugin-manifest.json",
+  "id": "org.sonora.lrclib",
+  "name": "LRCLIB Lyrics Provider",
+  "version": "1.0.0",
+  "author": {
+    "name": "Sonora Contributors",
+    "url": "https://github.com/sonora-audio/sonora"
+  },
+  "description": "Resolves plain and line-synced lyrics from the LRCLIB public API (lrclib.net) through the sandboxed host network API. No filesystem, process, or direct socket access.",
+  "license": "MIT",
+  "api_version": 1,
+  "capabilities": ["lyrics:provider", "network:fetch"],
+  "entry": "plugin.wasm",
+  "allowed_domains": ["https://lrclib.net"]
+}

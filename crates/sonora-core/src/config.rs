@@ -11,22 +11,52 @@ pub struct SonoraConfig {
 
 impl Default for SonoraConfig {
     fn default() -> Self {
-        let data_dir = std::env::var_os("XDG_DATA_HOME")
-            .map(PathBuf::from)
-            .unwrap_or_else(|| {
-                let mut home = std::env::var_os("HOME")
-                    .map(PathBuf::from)
-                    .unwrap_or_else(|| PathBuf::from("."));
-                home.push(".local");
-                home.push("share");
-                home
-            })
-            .join("sonora");
-
         Self {
-            data_dir,
+            data_dir: default_data_dir(),
             music_dirs: Vec::new(),
             default_volume: 1.0,
         }
+    }
+}
+
+/// Platform-appropriate data directory:
+///
+/// - Windows: `%LOCALAPPDATA%\Sonora` (fall back to `%USERPROFILE%`)
+/// - macOS: `~/Library/Application Support/Sonora`
+/// - Linux/other: `$XDG_DATA_HOME/sonora`, else `~/.local/share/sonora`
+/// - Final fallback: a `./sonora-data` directory, to avoid writing dotfiles
+///   into an unrelated working directory.
+fn default_data_dir() -> PathBuf {
+    #[cfg(target_os = "windows")]
+    {
+        if let Some(local) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+            return local.join("Sonora");
+        }
+        if let Some(profile) = std::env::var_os("USERPROFILE").map(PathBuf::from) {
+            return profile.join("Sonora");
+        }
+        return PathBuf::from(".").join("sonora-data");
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+            return home
+                .join("Library")
+                .join("Application Support")
+                .join("Sonora");
+        }
+        return PathBuf::from(".").join("sonora-data");
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        if let Some(xdg) = std::env::var_os("XDG_DATA_HOME").map(PathBuf::from) {
+            return xdg.join("sonora");
+        }
+        if let Some(home) = std::env::var_os("HOME").map(PathBuf::from) {
+            return home.join(".local").join("share").join("sonora");
+        }
+        PathBuf::from(".").join("sonora-data")
     }
 }

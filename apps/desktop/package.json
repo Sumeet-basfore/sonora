@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --experimental-strip-types --test test/customization.test.ts test/lyrics.test.ts test/marketplace.test.ts test/escape.test.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"

@@ -6,6 +6,8 @@ members = [
     "crates/sonora-audio",
     "crates/sonora-library",
     "crates/sonora-lyrics",
+    "crates/sonora-plugin",
+    "crates/sonora-registry",
     "crates/sonora-core",
     "apps/cli",
     "apps/tui",
@@ -27,6 +29,8 @@ sonora-dsp = { path = "crates/sonora-dsp" }
 sonora-audio = { path = "crates/sonora-audio" }
 sonora-library = { path = "crates/sonora-library" }
 sonora-lyrics = { path = "crates/sonora-lyrics" }
+sonora-plugin = { path = "crates/sonora-plugin" }
+sonora-registry = { path = "crates/sonora-registry" }
 sonora-core = { path = "crates/sonora-core" }
 
 # Error handling & logging
@@ -50,6 +54,12 @@ rtrb = "0.4"
 # Database & search
 rusqlite = { version = "0.40", features = ["bundled-full"] }
 
+# DSP & FFT
+rustfft = "6.4"
+
+# Image processing for artwork & thumbnails
+image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }
+
 # CLI & TUI frontends
 clap = { version = "4.6", features = ["derive"] }
 ratatui = "0.30"
@@ -58,3 +68,13 @@ crossterm = "0.29"
 # Tauri 2
 tauri = { version = "2" }
 tauri-build = { version = "2" }
+
+# Plugin sandboxing (WASM only; no native plugins)
+wasmtime = "34"
+wat = "1"
+semver = "1"
+
+# Marketplace distribution (registry fetch, checksums, packages)
+sha2 = "0.10"
+zip = { version = "2", default-features = false, features = ["deflate"] }
+ureq = { version = "2", default-features = true }

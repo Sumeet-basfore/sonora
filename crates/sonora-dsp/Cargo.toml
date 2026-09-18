@@ -8,3 +8,4 @@ authors.workspace = true
 [dependencies]
 sonora-common.workspace = true
 serde.workspace = true
+rustfft.workspace = true

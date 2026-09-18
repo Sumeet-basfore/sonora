@@ -2,7 +2,7 @@ pub const SCHEMA_SQL: &str = r#"
 -- 1. Artists Table
 CREATE TABLE IF NOT EXISTS artists (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL COLLATE NOCASE,
+    name TEXT NOT NULL UNIQUE COLLATE NOCASE,
     sort_name TEXT COLLATE NOCASE,
     musicbrainz_id TEXT UNIQUE,
     bio TEXT,
@@ -24,10 +24,12 @@ CREATE TABLE IF NOT EXISTS albums (
     cover_art_uri TEXT,
     dominant_color TEXT,
     vibrant_color TEXT,
-    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    UNIQUE(title COLLATE NOCASE, artist_id)
 );
 CREATE INDEX IF NOT EXISTS idx_albums_title ON albums(title);
 CREATE INDEX IF NOT EXISTS idx_albums_artist ON albums(artist_id);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_albums_title_null_artist ON albums(title COLLATE NOCASE) WHERE artist_id IS NULL;
 
 -- 3. Tracks Table
 CREATE TABLE IF NOT EXISTS tracks (
@@ -60,6 +62,7 @@ CREATE TABLE IF NOT EXISTS tracks (
 CREATE INDEX IF NOT EXISTS idx_tracks_album ON tracks(album_id);
 CREATE INDEX IF NOT EXISTS idx_tracks_artist ON tracks(artist_id);
 CREATE INDEX IF NOT EXISTS idx_tracks_play_count ON tracks(play_count DESC);
+CREATE INDEX IF NOT EXISTS idx_tracks_mtime_size ON tracks(file_path, file_modified_time, file_size_bytes);
 
 -- 4. Playlists & Playlist Tracks
 CREATE TABLE IF NOT EXISTS playlists (
@@ -82,12 +85,30 @@ CREATE TABLE IF NOT EXISTS playlist_tracks (
 );
 
 -- 5. FTS5 Trigram Full-Text Search Table
-CREATE VIRTUAL TABLE IF NOT EXISTS tracks_fts USING fts5(
+CREATE VIRTUAL TABLE IF NOT EXISTS fts_tracks USING fts5(
+    track_id UNINDEXED,
     title,
     artist_name,
     album_title,
-    content='tracks',
-    content_rowid='id',
-    tokenize='trigram'
+    genre_names,
+    tokenize = 'trigram'
 );
+
+-- 6. Lyrics Cache Table
+CREATE TABLE IF NOT EXISTS lyrics_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    track_id INTEGER REFERENCES tracks(id) ON DELETE CASCADE,
+    file_path TEXT,
+    title TEXT NOT NULL COLLATE NOCASE,
+    artist TEXT COLLATE NOCASE,
+    is_synced INTEGER NOT NULL DEFAULT 0,
+    format TEXT NOT NULL,
+    offset_ms INTEGER NOT NULL DEFAULT 0,
+    content_json TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch())
+);
+CREATE INDEX IF NOT EXISTS idx_lyrics_cache_track ON lyrics_cache(track_id);
+CREATE INDEX IF NOT EXISTS idx_lyrics_cache_title_artist ON lyrics_cache(title COLLATE NOCASE, artist COLLATE NOCASE);
+CREATE INDEX IF NOT EXISTS idx_lyrics_cache_file_path ON lyrics_cache(file_path);
 "#;

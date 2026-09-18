@@ -9,3 +9,5 @@ authors.workspace = true
 sonora-common.workspace = true
 serde.workspace = true
 tracing.workspace = true
+lofty.workspace = true
+reqwest = { version = "0.13", features = ["json", "blocking", "query"] }

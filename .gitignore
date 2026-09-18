@@ -3,6 +3,9 @@
 **/*.rs.bk
 *.pdb
 
+# Plugin workspace build artifacts (each plugin is its own Cargo workspace)
+plugins/*/target/
+
 # Node / Frontend
 node_modules/
 dist/
