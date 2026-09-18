@@ -57,7 +57,6 @@ export class MarketplaceViewComponent {
     if (!this.active) {
       if (this.lastViewKey !== '') {
         this.lastViewKey = '';
-        this.container.innerHTML = '';
       }
       return;
     }

@@ -8,10 +8,12 @@ import type {
   SearchResult,
 } from './types';
 
-const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window;
+function checkIsTauri(): boolean {
+  return typeof window !== 'undefined' && ('__TAURI_INTERNALS__' in window || '__TAURI__' in window);
+}
 
 async function invokeTauri<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
-  if (isTauri) {
+  if (checkIsTauri()) {
     const { invoke } = await import('@tauri-apps/api/core');
     return invoke<T>(cmd, args);
   }

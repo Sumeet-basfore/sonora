@@ -20,7 +20,12 @@ import { setupKeyboardShortcuts } from './shortcuts';
 import { appState } from './state';
 import { syncMarketplaceThemesFromBackend } from './marketplaceThemes';
 
+let isAppInitialized = false;
+
 function initializeApp() {
+  if (isAppInitialized) return;
+  isAppInitialized = true;
+
   const root = document.querySelector<HTMLDivElement>('#app');
   if (!root) return;
 
@@ -146,7 +151,8 @@ function initializeApp() {
   });
 }
 
-document.addEventListener('DOMContentLoaded', initializeApp);
-if (document.readyState === 'interactive' || document.readyState === 'complete') {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
   initializeApp();
 }
