@@ -9,6 +9,7 @@ plugins/*/target/
 # Node / Frontend
 node_modules/
 dist/
+dist-release/
 dist-ssr/
 *.local
 
