@@ -80,8 +80,14 @@ impl AudioOutput {
         match self {
             Self::Cpal { device, config, .. } => {
                 let stream_config: StreamConfig = (*config).into();
-                let err_fn = |err| {
-                    tracing::error!("CPAL audio stream error: {err}");
+                let last_error_log = std::sync::Mutex::new(std::time::Instant::now());
+                let err_fn = move |err| {
+                    if let Ok(mut last) = last_error_log.lock() {
+                        if last.elapsed() > Duration::from_secs(2) {
+                            tracing::warn!("CPAL audio stream status: {err}");
+                            *last = std::time::Instant::now();
+                        }
+                    }
                 };
 
                 let stream = device
@@ -99,6 +105,7 @@ impl AudioOutput {
 
                 Ok(OutputStreamHandle::Cpal(stream))
             }
+
             Self::Virtual {
                 sample_rate,
                 channels,
