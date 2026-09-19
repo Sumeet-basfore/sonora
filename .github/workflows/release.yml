@@ -160,13 +160,15 @@ jobs:
     name: Build Windows Packages (x86_64)
     needs: test
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Extract version
         id: version
-        shell: bash
         run: |
           VERSION="${{ github.event.inputs.tag_name || github.ref_name }}"
           VERSION="${VERSION#v}"
@@ -184,20 +186,21 @@ jobs:
           node-version: 22
 
       - name: Build desktop frontend
+        working-directory: apps/desktop
         run: |
-          npm --prefix apps/desktop install
-          npm --prefix apps/desktop run build
+          npm install
+          npm run build
 
       - name: Build Tauri Desktop Packages (MSI & NSIS EXE)
+        working-directory: apps/desktop
         run: |
-          npm --prefix apps/desktop run tauri:build -- --bundles msi,nsis
+          npm run tauri:build -- --bundles msi,nsis
 
       - name: Build Terminal Binaries (CLI & TUI)
         run: |
           cargo build --release --bin sonora --bin sonora-tui
 
       - name: Sanity check Windows binaries
-        shell: bash
         run: |
           ./target/release/sonora.exe --version
           ./target/release/sonora.exe status
