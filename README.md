@@ -6,47 +6,38 @@
 
 <p align="center">
   <a href="https://github.com/Sumeet-basfore/sonora/releases/latest"><img src="https://img.shields.io/github/v/release/Sumeet-basfore/sonora?color=6366f1&label=Release&style=flat-square" alt="Release"></a>
-  <a href="https://github.com/Sumeet-basfore/sonora/actions"><img src="https://img.shields.io/github/actions/workflow/status/Sumeet-basfore/sonora/ci.yml?branch=main&label=CI&style=flat-square" alt="CI Status"></a>
   <a href="LICENSE-MIT"><img src="https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue?style=flat-square" alt="License"></a>
   <a href="https://github.com/Sumeet-basfore/sonora"><img src="https://img.shields.io/badge/Local--First-Zero%20Cloud%20Lock--in-emerald?style=flat-square" alt="Local-First"></a>
   <a href="https://github.com/Sumeet-basfore/sonora"><img src="https://img.shields.io/badge/Audio%20DSP-384kHz%20%2F%2032--bit%20Float-amber?style=flat-square" alt="Audio DSP"></a>
+  <a href="https://github.com/Sumeet-basfore/sonora"><img src="https://img.shields.io/badge/Lyrics-Millisecond%20Synced-indigo?style=flat-square" alt="Synced Lyrics"></a>
 </p>
 
 ---
 
-## 🎬 Launch Showcase (20s Video)
-
-https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4
+## 🚀 Experience Sonora
 
 <p align="center">
-  <video src="https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4" poster="docs/assets/sonora-launch-poster.jpg" width="100%" controls autoplay muted loop>
-    <a href="https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4">
-      <img src="docs/assets/sonora-launch-preview.gif" alt="Sonora Launch Video Preview" width="100%" />
-    </a>
-  </video>
-</p>
-<p align="center">
-  <em>High-resolution 1080p 60 FPS demo showcasing the Audiophile DSP engine, Universal Command Palette, and Synced Lyrics.</em>
+  <img src="docs/assets/sonora-showcase.gif" alt="Sonora v0.2 Showcase" width="100%" style="max-width: 1000px; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.6);" />
 </p>
 
 ---
 
-## 📸 Workspaces & Interface Showcase
+## 📸 4 Modular Workspaces
 
-Sonora features **4 modular workspaces** designed for different listening contexts — from deep audiophile analysis to immersive theater view.
+Sonora provides dedicated, context-tuned workspaces — switch instantly with keyboard shortcuts or the workspace selector.
 
 ### 1. Audiophile Studio & Atmospheric Theater
-| **Audiophile Studio** (64-Band Spectrum, 384kHz/32-bit DSP) | **Atmospheric Theater** (Full-Bleed Art & Synced Lyrics) |
+| **Audiophile Studio** (64-Band Real-Time Spectrum, 384kHz/32-bit Float DSP) | **Atmospheric Theater** (Full-Bleed Artwork & Dynamic Synced Lyrics) |
 | :---: | :---: |
 | [![Audiophile Studio](docs/assets/screenshot-audiophile-studio.png)](docs/assets/screenshot-audiophile-studio.png) | [![Atmospheric Theater](docs/assets/screenshot-atmospheric-theater.png)](docs/assets/screenshot-atmospheric-theater.png) |
 
 ### 2. Modern Curator & Synced Lyrics Engine
-| **Modern Curator** (Rich Library & MusicBrainz Enrichment) | **Synced Lyrics View** (`Cmd + L`, Millisecond Precision) |
+| **Modern Curator** (Instant Library Search & MusicBrainz Metadata) | **Synced Lyrics View** (`Cmd + L`, Millisecond Precision Offset) |
 | :---: | :---: |
 | [![Modern Curator](docs/assets/screenshot-modern-curator.png)](docs/assets/screenshot-modern-curator.png) | [![Synced Lyrics](docs/assets/screenshot-lyrics-view.png)](docs/assets/screenshot-lyrics-view.png) |
 
-### 3. Album Detail & Minimal Player
-| **Album Deep Dive** (Multi-Provider Artwork & Tracklists) | **Minimal Player** (Distraction-Free Transport) |
+### 3. Album Deep Dive & Minimal Player
+| **Album Detail** (Multi-Provider Artwork & Hi-Res Metadata) | **Minimal Player** (Distraction-Free Desktop Transport) |
 | :---: | :---: |
 | [![Album Detail](docs/assets/screenshot-album-detail.png)](docs/assets/screenshot-album-detail.png) | [![Minimal Player](docs/assets/screenshot-minimal-player.png)](docs/assets/screenshot-minimal-player.png) |
 
@@ -54,10 +45,10 @@ Sonora features **4 modular workspaces** designed for different listening contex
 
 ## 🌟 What Makes Sonora Different?
 
-Most modern music players have turned into web wrappers for rental streaming services. **Sonora is built on a single core principle: your music collection is a permanent library, and playing it should feel like operating a precision high-end instrument.**
+Most modern music players are thin web wrappers for subscription streaming platforms. **Sonora is built on a single core principle: you own your music collection, and playing it should feel like operating a precision high-end instrument.**
 
-* **Sovereign & Local-First**: No required user accounts, no telemetry, no remote servers phone-home, no paywalls.
-* **True Bit-Perfect Pipeline**: Dual-decoder gapless engine (Symphonia + Rubato 64-bit sinc resampler) operating at up to 384kHz / 32-bit float.
+* **Sovereign & Local-First**: No accounts, no telemetry, no tracking, no remote server dependency, and zero cloud lock-in.
+* **True Bit-Perfect Pipeline**: Dual-decoder gapless engine (Symphonia + Rubato 64-bit sinc resampler) operating at up to 384kHz / 32-bit float with EBU R128 True Peak Limiting.
 * **Decoupled 60 FPS Audio DSP**: Real-time 64-band logarithmic FFT spectrum analyzer running on a dedicated audio thread with lock-free ring buffer IPC (`rtrb`).
 * **Universal Command Palette (`Cmd + K` / `/`)**: Sub-5ms instant local library queries via SQLite FTS5 alongside ranked online metadata matching (MusicBrainz, Cover Art Archive, Fanart.tv).
 * **Millisecond Synced Lyrics (`Cmd + L`)**: Synchronized word/line scrolling with manual `±10ms` offset stepper and LRCLIB integration.
