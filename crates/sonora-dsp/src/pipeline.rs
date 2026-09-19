@@ -169,10 +169,13 @@ impl DspPipeline {
             return;
         }
 
-        for chunk in buffer.chunks_exact_mut(2) {
-            let (l, r) = self.process_stereo(chunk[0], chunk[1]);
-            chunk[0] = l;
-            chunk[1] = r;
+        let len = buffer.len() - (buffer.len() % 2);
+        let mut i = 0;
+        while i < len {
+            let (l, r) = self.process_stereo(buffer[i], buffer[i + 1]);
+            buffer[i] = l;
+            buffer[i + 1] = r;
+            i += 2;
         }
     }
 
