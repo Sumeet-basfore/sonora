@@ -151,6 +151,14 @@ export class AlbumDetailComponent {
                 </svg>
                 <span>Add to Queue</span>
               </button>
+              <button class="button button-secondary find-album-art-btn" title="Find artwork online">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21 15 16 10 5 21"/>
+                </svg>
+                <span>Find Artwork</span>
+              </button>
             </div>
           </div>
         </div>
@@ -191,6 +199,8 @@ export class AlbumDetailComponent {
                         ` : ''}
                         <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                         <div class="col-actions">
+                          <button class="row-meta-btn" title="Find Metadata" aria-label="Find metadata for ${escapeHtml(t.title)}">🏷️</button>
+                          <button class="row-lyrics-btn" title="Find Lyrics" aria-label="Find lyrics for ${escapeHtml(t.title)}">🎵</button>
                           <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>
                         </div>
                       </div>
@@ -222,7 +232,6 @@ export class AlbumDetailComponent {
   }
 
   private attachEventListeners() {
-
     const playAlbumBtn = this.container.querySelector('.play-album-btn');
     playAlbumBtn?.addEventListener('click', () => {
       appState.playAlbum(this.albumId);
@@ -236,13 +245,26 @@ export class AlbumDetailComponent {
       await appState.refresh();
     });
 
+    const findArtBtn = this.container.querySelector('.find-album-art-btn');
+    findArtBtn?.addEventListener('click', () => {
+      appState.openArtworkFinder({
+        targetType: 'album',
+        targetId: this.albumId,
+        title: this.albumTitle,
+        artistName: this.artistName,
+      });
+    });
+
     const trackRows = this.container.querySelectorAll('.track-row');
     trackRows.forEach((row) => {
       const trackId = parseInt(row.getAttribute('data-track-id') || '0', 10);
       const playBtn = row.querySelector('.row-play-btn');
       const titleSpan = row.querySelector('.row-track-title');
       const queueBtn = row.querySelector('.row-queue-btn');
+      const metaBtn = row.querySelector('.row-meta-btn');
+      const lyricsBtn = row.querySelector('.row-lyrics-btn');
 
+      const trackObj = this.tracks.find((t) => t.track_id === trackId);
       const triggerPlay = () => appState.playTrack(trackId);
 
       playBtn?.addEventListener('click', (e) => {
@@ -258,6 +280,34 @@ export class AlbumDetailComponent {
         e.stopPropagation();
         await api.enqueueTrack(trackId);
         await appState.refresh();
+      });
+
+      metaBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (trackObj) {
+          appState.openMatchInspector({
+            trackId: trackObj.track_id,
+            title: trackObj.title,
+            artistName: trackObj.artist_name || this.artistName,
+            albumTitle: trackObj.album_title || this.albumTitle,
+            durationMs: trackObj.duration_ms,
+            trackNumber: trackObj.track_number,
+          });
+        }
+      });
+
+      lyricsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (trackObj) {
+          appState.openLyricsManager({
+            trackId: trackObj.track_id,
+            filePath: trackObj.file_path,
+            title: trackObj.title,
+            artist: trackObj.artist_name || this.artistName,
+            album: trackObj.album_title || this.albumTitle,
+            durationMs: trackObj.duration_ms,
+          });
+        }
       });
     });
   }

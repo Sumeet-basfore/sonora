@@ -111,4 +111,49 @@ CREATE TABLE IF NOT EXISTS lyrics_cache (
 CREATE INDEX IF NOT EXISTS idx_lyrics_cache_track ON lyrics_cache(track_id);
 CREATE INDEX IF NOT EXISTS idx_lyrics_cache_title_artist ON lyrics_cache(title COLLATE NOCASE, artist COLLATE NOCASE);
 CREATE INDEX IF NOT EXISTS idx_lyrics_cache_file_path ON lyrics_cache(file_path);
+
+-- 7. Online Metadata Entity Cache (MusicBrainz entities, lookups, searches)
+CREATE TABLE IF NOT EXISTS online_metadata_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cache_key TEXT NOT NULL UNIQUE,
+    entity_type TEXT NOT NULL,
+    payload_json TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_online_metadata_cache_key ON online_metadata_cache(cache_key);
+CREATE INDEX IF NOT EXISTS idx_online_metadata_cache_expires ON online_metadata_cache(expires_at);
+
+-- 8. Metadata Ranked Candidates Cache (Track / Album match query results)
+CREATE TABLE IF NOT EXISTS metadata_candidates_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    query_fingerprint TEXT NOT NULL UNIQUE,
+    candidates_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_metadata_candidates_fingerprint ON metadata_candidates_cache(query_fingerprint);
+
+-- 9. Online Artwork Candidates Cache (Cover Art Archive / Wikidata / Fanart.tv)
+CREATE TABLE IF NOT EXISTS online_artwork_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cache_key TEXT NOT NULL UNIQUE,
+    entity_type TEXT NOT NULL,
+    candidates_json TEXT NOT NULL,
+    provider TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_online_artwork_cache_key ON online_artwork_cache(cache_key);
+
+-- 10. Lyrics Candidates Cache (Multi-candidate search results)
+CREATE TABLE IF NOT EXISTS lyrics_candidates_cache (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    query_fingerprint TEXT NOT NULL UNIQUE,
+    candidates_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
+    expires_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_lyrics_candidates_fingerprint ON lyrics_candidates_cache(query_fingerprint);
 "#;

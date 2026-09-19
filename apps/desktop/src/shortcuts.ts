@@ -12,6 +12,18 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
 
     if (e.key === 'Escape') {
       window.dispatchEvent(new CustomEvent('sonora-close-settings'));
+      if (appState.isMatchInspectorVisible()) {
+        appState.closeMatchInspector();
+        return;
+      }
+      if (appState.isArtworkFinderVisible()) {
+        appState.closeArtworkFinder();
+        return;
+      }
+      if (appState.isLyricsManagerVisible()) {
+        appState.closeLyricsManager();
+        return;
+      }
       if (appState.isScanModalVisible()) {
         appState.toggleScanModal(false);
         return;
@@ -38,6 +50,12 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
     if ((e.ctrlKey || e.metaKey) && e.key === ',') {
       e.preventDefault();
       window.dispatchEvent(new CustomEvent('sonora-open-settings'));
+      return;
+    }
+
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
+      e.preventDefault();
+      appState.openLyricsManager();
       return;
     }
 

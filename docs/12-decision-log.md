@@ -22,6 +22,11 @@ This document establishes the official **Architecture Decision Records (ADR)** f
 │ ADR-010 │ Zero-Trust Media Asset Sanitization & Dimension Guards │ ACCEPTED    │ Irreversible    │
 │ ADR-011 │ Anti-Bloat Boundaries: No DRM, Social Feeds, Cloud Lock│ ACCEPTED    │ Irreversible    │
 │ ADR-012 │ Production Audio Engine & DSP Signal Pipeline          │ ACCEPTED    │ Irreversible    │
+│ ADR-013 │ Online Metadata & Abstracted Provider Engine (MB/CAA)  │ ACCEPTED    │ Reversible Prov │
+│ ADR-014 │ Unified Multi-Source Artwork Pipeline & Cache Hierarchy│ ACCEPTED    │ Reversible Cache│
+│ ADR-015 │ Dedicated Lyrics Manager & Multi-Candidate Override UX │ ACCEPTED    │ Reversible Workspace
+│ ADR-016 │ Deterministic Explainable Metadata Matching & Scoring  │ ACCEPTED    │ Reversible Score│
+│ ADR-017 │ Integrated Contextual Discovery & Universal Search Model│ ACCEPTED    │ Reversible UI   │
 └─────────┴────────────────────────────────────────────────────────┴─────────────┴─────────────────┘
 ```
 
@@ -213,3 +218,76 @@ This document establishes the official **Architecture Decision Records (ADR)** f
   - *Positive*: Crystal-clear audiophile sound quality; zero distortion; bit-perfect verification passed; zero-discontinuity gapless playback; full ALSA/WASAPI/CoreAudio device discovery.
   - *Trade-off*: Sinc resampling incurs higher CPU usage than linear interpolation, but stays well under <1.5% CPU on modern cores due to SIMD vectorization in `rubato`.
 
+---
+
+### ADR-013: Online Metadata Subsystem & Abstracted Provider Architecture
+
+- **Status**: `ACCEPTED` (Reversible Provider Layer)
+- **Context**: Local audio file tags are frequently incomplete or inconsistent. Connecting to online metadata services (MusicBrainz, Cover Art Archive, LRCLIB) expands library richness, but unthrottled or tightly coupled API calls threaten player stability, offline functionality, and user privacy.
+- **Decision**: Architect an asynchronous, provider-based metadata enrichment layer in `sonorad`. MusicBrainz is the canonical metadata authority and Cover Art Archive is the primary release art source. All HTTP requests are rate-limited via a thread-safe Token Bucket (1.0 req/sec for MusicBrainz), supply compliant User-Agent headers, enforce HTTPS, require no user accounts, and operate strictly outside the audio path.
+- **Alternatives Considered**:
+  - *Direct Hardcoded HTTP Fetching in UI*: Couples UI components to third-party REST schemas, risks IP bans due to unthrottled requests, and breaks when offline.
+  - *Proprietary Cloud Metadata Proxy*: High operational overhead, vendor lock-in, and privacy compromise.
+- **Consequences**:
+  - *Positive*: Rich entity metadata (Release Groups vs Pressing Releases); 100% offline playback resilience; zero user account friction; zero telemetry.
+  - *Reversibility*: Provider implementations adhere to Rust `async_trait` interfaces (`MetadataProvider`, `ArtworkProvider`, `LyricsProvider`) and can be added or upgraded without modifying UI logic.
+
+---
+
+### ADR-014: Unified Multi-Source Artwork Pipeline & Cache Hierarchy
+
+- **Status**: `ACCEPTED` (Reversible Caching & Storage Layer)
+- **Context**: Managing artwork from multiple sources (embedded ID3 APIC, local folder `cover.jpg`, Cover Art Archive, Fanart.tv, Wikidata) often leads to silent file overwrites, low-resolution upscaling artifacts, and security vulnerabilities from untrusted remote image headers.
+- **Decision**: Establish a strict multi-tiered artwork resolution hierarchy. Distinguish between Embedded Artwork, Local Folder Artwork, Cached Downloaded Artwork, Release Art (specific pressing), Release-Group Art (master album), and Artist Visuals. All downloaded assets are validated through pure-Rust zero-trust dimension guards (max 8192x8192) and stored as WebP textures (`thumbnails/` 300x300 and `full/` 1200x1200) in `$XDG_CACHE_HOME/sonora/covers/`. Applying online artwork **never** silently mutates physical audio tags or local folder images without explicit user opt-in.
+- **Alternatives Considered**:
+  - *Direct File Overwrite*: Silently replacing `cover.jpg` or rewriting ID3 APIC tags corrupts user files without recovery paths.
+  - *On-the-Fly Dynamic Image Fetching without Local Caching*: Causes network latency, stuttering UI grid scrolls, and broken offline artwork display.
+- **Consequences**:
+  - *Positive*: High-DPI visual legibility; protection against C-based image exploit CVEs; complete user control over file mutation.
+  - *Reversibility*: Image cache format (WebP) and storage directory structure can be migrated independently of SQLite library schema.
+
+---
+
+### ADR-015: Dedicated Lyrics Manager & Multi-Candidate Manual Override UX
+
+- **Status**: `ACCEPTED` (Reversible UI/Workspace Domain)
+- **Context**: Automatic lyric resolvers occasionally select incorrect pressings, plain text instead of synced LRC, or undesirable language translations. Burying lyric settings inside application preferences makes discovering, switching, and fine-tuning lyrics tedious.
+- **Decision**: Elevate lyrics into a dedicated, first-class **Lyrics Manager Workspace** (`Cmd/Ctrl + L` or context menu). The workspace displays ranked candidate options (showing duration delta $\Delta t$, sync type, provider name, and match score), allows real-time live candidate auditioning against playing audio, provides an interactive timing offset bar ($\pm 100\text{ ms}$), supports local `.lrc` sidecar exporting, and enables manual text/timestamp editing.
+- **Alternatives Considered**:
+  - *Automated Single-Candidate Selection Only*: Leaves users unable to correct mismatched lyrics for obscure or live recordings.
+  - *Settings Sub-Menu Configuration*: Fragments the lyric synchronization workflow and forces users away from active playback UI.
+- **Consequences**:
+  - *Positive*: Instant lyric correction; precision timing alignment; open export to standard `.lrc` sidecars.
+  - *Reversibility*: The Lyrics Manager interacts with `sonorad` via normalized IPC messages and the universal `LyricsDocument` AST.
+
+---
+
+### ADR-016: Deterministic Explainable Metadata Matching & Scoring Model
+
+- **Status**: `ACCEPTED` (Reversible Scoring Metric Layer)
+- **Context**: Automated metadata matchers using fuzzy algorithms often fail on minor title variations (e.g. `"Title (Remastered)"` vs `"Title"`) or silently mis-tag user tracks using low-confidence probabilistic guesses.
+- **Decision**: Implement a **100% deterministic, explainable matching engine** in `sonorad`. Normalize text (diacritics removal, Unicode NFKD, string cleanup, feature artist extraction, version noise removal) and calculate composite weighted confidence scores $S \in [0.0, 1.0]$ based on Jaro-Winkler title similarity, token-set artist similarity, album similarity, track position, and Gaussian duration penalty decay. Enforce strict confidence action tiers:
+  - *High Confidence ($S \ge 0.90$)*: Safe suggestion / optional 1-click batch match.
+  - *Medium Confidence ($0.65 \le S < 0.89$)*: Requires user confirmation via side-by-side diff inspector.
+  - *Low Confidence ($S < 0.65$)*: Displays alternatives; requires manual selection.
+  - *Exact MBID / ISRC Shortcuts*: Instantly score $1.00$.
+- **Alternatives Considered**:
+  - *Black-Box AI / LLM Matching*: Nondeterministic, expensive, requires external cloud APIs, and offers zero mathematical score transparency.
+  - *Binary Exact-String Matching*: Rejects valid matches due to minor formatting discrepancies.
+- **Consequences**:
+  - *Positive*: High match accuracy; zero silent tag corruption; 100% mathematical score breakdown transparency in UI.
+  - *Reversibility*: Metric weights ($w_i$) and string distance algorithms (Jaro-Winkler, Levenshtein) can be tuned independently of IPC contracts.
+
+---
+
+### ADR-017: Integrated Contextual Discovery & Universal Search Model
+
+- **Status**: `ACCEPTED` (Reversible Presentation & Navigation Model)
+- **Context**: Adding online search and enrichment to desktop media players frequently leads to UI fragmentation—either creating an unnecessary "Discover" sidebar section that duplicates local library views or forcing users into separate plugin dialogs.
+- **Decision**: Integrate online discovery directly into Sonora's existing universal search overlay (`Cmd/Ctrl + K` or `/`) and item context menus (`[Find Metadata]`, `[Find Artwork]`, `[Find Lyrics]`). Global Search presents tabbed scopes (*Local Library*, *Online Metadata*, *Lyrics*), returning sub-5ms local FTS5 results immediately while streaming debounced online candidates.
+- **Alternatives Considered**:
+  - *Adding a Top-Level "Discover" Sidebar Section*: Creates visual clutter and fragments local vs online browsing modes.
+  - *Modal Dialog per Feature*: Isolates metadata, lyrics, and artwork into disparate, non-standardized popups.
+- **Consequences**:
+  - *Positive*: Streamlined, low-friction navigation; zero sidebar bloat; cohesive contextual actions across all views.
+  - *Reversibility*: Contextual actions communicate via standard frontend state stores and IPC event handlers.

@@ -1,11 +1,22 @@
 use sonora_common::{init_logging, LogConfig, TrackId};
-use sonora_core::{PlaybackStatus, QueueItem, SonoraApp, SonoraCommand, SonoraConfig};
+use sonora_core::{
+    ArtworkCandidate, ArtworkQuery, CachedArtworkAsset, LyricsCandidate, LyricsCandidateQuery,
+    PlaybackStatus, QueueItem, RankedCandidateMatch, SonoraApp, SonoraCommand, SonoraConfig,
+};
 use sonora_library::{AlbumDto, ArtistDto, LibrarySummary, ScanStats, SearchResult};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::State;
 
 pub struct AppState {
-    app: Mutex<Option<SonoraApp>>,
+    app: Mutex<Option<Arc<SonoraApp>>>,
+}
+
+fn get_app(state: &State<AppState>) -> Result<Arc<SonoraApp>, String> {
+    let guard = state.app.lock().map_err(|e| e.to_string())?;
+    guard
+        .as_ref()
+        .cloned()
+        .ok_or_else(|| "Sonora App is not initialized".to_string())
 }
 
 #[tauri::command]
@@ -410,11 +421,92 @@ fn list_plugins(state: State<AppState>) -> Result<Vec<sonora_plugin::PluginInfo>
 }
 
 fn app_of<'a>(
-    guard: &'a std::sync::MutexGuard<'a, Option<SonoraApp>>,
+    guard: &'a std::sync::MutexGuard<'a, Option<Arc<SonoraApp>>>,
 ) -> Result<&'a SonoraApp, String> {
     guard
-        .as_ref()
+        .as_deref()
         .ok_or_else(|| "Sonora App is not initialized".to_string())
+}
+
+#[tauri::command]
+async fn enrichment_find_metadata(
+    state: State<'_, AppState>,
+    track_id: i64,
+) -> Result<Vec<RankedCandidateMatch>, String> {
+    let app = get_app(&state)?;
+    app.find_metadata_candidates(TrackId(track_id))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn enrichment_apply_metadata(
+    state: State<'_, AppState>,
+    track_id: i64,
+    candidate: RankedCandidateMatch,
+) -> Result<(), String> {
+    let app = get_app(&state)?;
+    app.apply_metadata(TrackId(track_id), &candidate)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn enrichment_find_artwork(
+    state: State<'_, AppState>,
+    query: ArtworkQuery,
+) -> Result<Vec<ArtworkCandidate>, String> {
+    let app = get_app(&state)?;
+    app.find_artwork_candidates(&query)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn enrichment_apply_artwork(
+    state: State<'_, AppState>,
+    target_type: String,
+    target_id: i64,
+    image_url: String,
+) -> Result<CachedArtworkAsset, String> {
+    let app = get_app(&state)?;
+    app.apply_artwork(&target_type, target_id, &image_url)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn enrichment_find_lyrics(
+    state: State<'_, AppState>,
+    query: LyricsCandidateQuery,
+) -> Result<Vec<LyricsCandidate>, String> {
+    let app = get_app(&state)?;
+    app.find_lyrics_candidates(&query)
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn enrichment_apply_lyrics(
+    state: State<'_, AppState>,
+    track_id: Option<i64>,
+    file_path: Option<String>,
+    candidate: LyricsCandidate,
+) -> Result<(), String> {
+    let app = get_app(&state)?;
+    app.apply_lyrics_candidate(track_id, file_path.as_deref(), &candidate)
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+fn enrichment_export_lrc(
+    state: State<'_, AppState>,
+    track_id: Option<i64>,
+    file_path: Option<String>,
+    lrc_content: String,
+) -> Result<String, String> {
+    let app = get_app(&state)?;
+    app.export_lrc_sidecar(track_id, file_path.as_deref(), &lrc_content)
+        .map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -537,7 +629,8 @@ pub fn run() {
     let config = SonoraConfig::default();
     let app_instance = SonoraApp::new(config.clone())
         .or_else(|_| SonoraApp::in_memory(config))
-        .ok();
+        .ok()
+        .map(Arc::new);
 
     // Boot-time plugin discovery: validate every plugin directory, then
     // load + start each one. Failures are isolated per plugin and logged;
@@ -609,6 +702,13 @@ pub fn run() {
             marketplace_theme_css,
             marketplace_active_theme,
             marketplace_set_active_theme,
+            enrichment_find_metadata,
+            enrichment_apply_metadata,
+            enrichment_find_artwork,
+            enrichment_apply_artwork,
+            enrichment_find_lyrics,
+            enrichment_apply_lyrics,
+            enrichment_export_lrc,
         ])
         .run(tauri::generate_context!())
         .expect("error while running sonora desktop application");

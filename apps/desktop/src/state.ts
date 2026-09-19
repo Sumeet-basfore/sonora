@@ -1,5 +1,5 @@
-import { api } from './api';
-import type { ActiveView, PlaybackStatus, QueueItem } from './types';
+import { api } from './api.ts';
+import type { ActiveView, PlaybackStatus, QueueItem } from './types.ts';
 
 type Listener = () => void;
 
@@ -24,7 +24,9 @@ class StateManager {
   private artworkCache: Map<string, string | null> = new Map();
 
   constructor() {
-    this.startPolling();
+    if (typeof window !== 'undefined') {
+      this.startPolling();
+    }
   }
 
   public subscribe(listener: Listener): () => void {
@@ -119,14 +121,20 @@ class StateManager {
   public startPolling() {
     if (this.pollIntervalId !== null) return;
     this.refresh();
-    this.pollIntervalId = window.setInterval(() => {
-      this.refreshStatusOnly();
-    }, 250);
+    const setIntervalFn = typeof window !== 'undefined' ? window.setInterval : globalThis.setInterval;
+    if (setIntervalFn) {
+      this.pollIntervalId = setIntervalFn(() => {
+        this.refreshStatusOnly();
+      }, 250) as unknown as number;
+    }
   }
 
   public stopPolling() {
     if (this.pollIntervalId !== null) {
-      clearInterval(this.pollIntervalId);
+      const clearIntervalFn = typeof window !== 'undefined' ? window.clearInterval : globalThis.clearInterval;
+      if (clearIntervalFn) {
+        clearIntervalFn(this.pollIntervalId as any);
+      }
       this.pollIntervalId = null;
     }
   }
@@ -231,6 +239,128 @@ class StateManager {
   public async clearQueue() {
     await api.clearQueue();
     await this.refresh();
+  }
+
+  // --- Enrichment Contextual UI State ---
+
+  private isMatchInspectorOpen: boolean = false;
+  private activeMatchTrack: {
+    trackId: number;
+    title: string;
+    artistName?: string | null;
+    albumTitle?: string | null;
+    durationMs?: number;
+    trackNumber?: number | null;
+  } | null = null;
+
+  public isMatchInspectorVisible(): boolean {
+    return this.isMatchInspectorOpen;
+  }
+
+  public getActiveMatchTrack() {
+    return this.activeMatchTrack;
+  }
+
+  public openMatchInspector(track: {
+    trackId: number;
+    title: string;
+    artistName?: string | null;
+    albumTitle?: string | null;
+    durationMs?: number;
+    trackNumber?: number | null;
+  }) {
+    this.activeMatchTrack = track;
+    this.isMatchInspectorOpen = true;
+    this.notify();
+  }
+
+  public closeMatchInspector() {
+    this.isMatchInspectorOpen = false;
+    this.activeMatchTrack = null;
+    this.notify();
+  }
+
+  private isArtworkFinderOpen: boolean = false;
+  private activeArtworkTarget: {
+    targetType: 'album' | 'artist' | 'track';
+    targetId: number;
+    title: string;
+    artistName?: string | null;
+    mbid?: string | null;
+  } | null = null;
+
+  public isArtworkFinderVisible(): boolean {
+    return this.isArtworkFinderOpen;
+  }
+
+  public getActiveArtworkTarget() {
+    return this.activeArtworkTarget;
+  }
+
+  public openArtworkFinder(target: {
+    targetType: 'album' | 'artist' | 'track';
+    targetId: number;
+    title: string;
+    artistName?: string | null;
+    mbid?: string | null;
+  }) {
+    this.activeArtworkTarget = target;
+    this.isArtworkFinderOpen = true;
+    this.notify();
+  }
+
+  public closeArtworkFinder() {
+    this.isArtworkFinderOpen = false;
+    this.activeArtworkTarget = null;
+    this.notify();
+  }
+
+  private isLyricsManagerOpen: boolean = false;
+  private activeLyricsTrack: {
+    trackId?: number | null;
+    filePath?: string | null;
+    title: string;
+    artist?: string | null;
+    album?: string | null;
+    durationMs?: number | null;
+  } | null = null;
+
+  public isLyricsManagerVisible(): boolean {
+    return this.isLyricsManagerOpen;
+  }
+
+  public getActiveLyricsTrack() {
+    return this.activeLyricsTrack;
+  }
+
+  public openLyricsManager(track?: {
+    trackId?: number | null;
+    filePath?: string | null;
+    title: string;
+    artist?: string | null;
+    album?: string | null;
+    durationMs?: number | null;
+  }) {
+    if (track) {
+      this.activeLyricsTrack = track;
+    } else if (this.status.current_track) {
+      this.activeLyricsTrack = {
+        trackId: this.status.current_track.track_id,
+        filePath: this.status.current_track.file_path,
+        title: this.status.current_track.title,
+        artist: this.status.current_track.artist,
+        album: this.status.current_track.album,
+        durationMs: this.status.current_track.duration_ms,
+      };
+    }
+    this.isLyricsManagerOpen = true;
+    this.notify();
+  }
+
+  public closeLyricsManager() {
+    this.isLyricsManagerOpen = false;
+    this.activeLyricsTrack = null;
+    this.notify();
   }
 }
 

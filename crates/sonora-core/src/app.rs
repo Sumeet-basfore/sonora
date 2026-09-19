@@ -20,7 +20,8 @@ use serde::{Deserialize, Serialize};
 use sonora_audio::AudioPlayer;
 use sonora_common::{PlaybackState, Result, SonoraError, TrackId};
 use sonora_library::{
-    AlbumDto, ArtistDto, ArtworkCache, Database, LibrarySummary, ScanStats, SearchResult,
+    AlbumDto, ArtistDto, ArtworkCache, Database, LibraryRepository, LibrarySummary, ScanStats,
+    SearchResult,
 };
 use sonora_plugin::{PluginHost, PluginManifest};
 use sonora_registry::Marketplace;
@@ -49,6 +50,7 @@ pub struct SonoraApp {
     playback: PlaybackService,
     queue: QueueService,
     lyrics: LyricsService,
+    enrichment: crate::enrichment::EnrichmentRouter,
     plugins: Arc<PluginHost>,
     marketplace: Marketplace,
 }
@@ -63,12 +65,14 @@ impl SonoraApp {
         let bus = EventBus::default();
         let marketplace = Marketplace::new(&config.data_dir, Arc::clone(&plugins), None, None)
             .map_err(sonora_common::SonoraError::from)?;
+        let enrichment = crate::enrichment::EnrichmentRouter::new(Arc::clone(&db), None);
 
         let app = Self {
             library: LibraryService::new(Arc::clone(&db), Arc::clone(&artwork_cache), bus.clone()),
             playback: PlaybackService::new(Arc::clone(&player), bus.clone()),
             queue: QueueService::new(Arc::clone(&queue_handle), bus.clone()),
             lyrics: LyricsService::new(Arc::clone(&db), Arc::clone(&plugins), bus.clone()),
+            enrichment,
             config,
             db,
             bus,
@@ -628,5 +632,223 @@ impl SonoraApp {
     ) -> Result<()> {
         self.lyrics
             .save_lyrics_offset(track_id, file_path, offset_ms)
+    }
+
+    // --- Online Enrichment Operations (Contextual) ---
+
+    /// Reference to the enrichment router subsystem.
+    pub fn enrichment(&self) -> &crate::enrichment::EnrichmentRouter {
+        &self.enrichment
+    }
+
+    /// Asynchronously find and rank metadata candidates for a library track.
+    pub async fn find_metadata_candidates(
+        &self,
+        track_id: TrackId,
+    ) -> Result<Vec<crate::metadata::RankedCandidateMatch>> {
+        let details = self
+            .library
+            .get_track_details(track_id)?
+            .ok_or_else(|| SonoraError::Library(format!("Track ID {track_id:?} not found")))?;
+
+        let local = crate::metadata::LocalTrackMetadata {
+            title: details.title,
+            artist: details.artist_name,
+            album: details.album_title,
+            duration_ms: details.duration_ms as u64,
+            track_number: details.track_number.map(|n| n as u32),
+            ..Default::default()
+        };
+
+        self.enrichment
+            .find_metadata_candidates(&local)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
+
+    /// Apply approved metadata candidate to the local SQLite database.
+    /// This never writes to or alters physical audio files on disk.
+    pub fn apply_metadata(
+        &self,
+        track_id: TrackId,
+        candidate: &crate::metadata::RankedCandidateMatch,
+    ) -> Result<()> {
+        let title = &candidate.candidate_track.title;
+        let artist_name = candidate
+            .candidate_track
+            .artist_credits
+            .first()
+            .map(|c| c.name.as_str());
+        let album_title = candidate
+            .candidate_release
+            .as_ref()
+            .map(|r| r.title.as_str())
+            .or_else(|| {
+                candidate
+                    .candidate_release_group
+                    .as_ref()
+                    .map(|rg| rg.title.as_str())
+            });
+        let release_year: Option<i32> = candidate
+            .candidate_release
+            .as_ref()
+            .and_then(|r| r.date.as_ref())
+            .or_else(|| {
+                candidate
+                    .candidate_release_group
+                    .as_ref()
+                    .and_then(|rg| rg.first_release_date.as_ref())
+            })
+            .and_then(|d| d.split('-').next())
+            .and_then(|y| y.parse::<i32>().ok());
+        let track_number: Option<i32> = candidate
+            .candidate_track
+            .position
+            .map(|p| p as i32)
+            .or_else(|| {
+                candidate
+                    .candidate_track
+                    .number
+                    .as_ref()
+                    .and_then(|n| n.parse::<i32>().ok())
+            });
+        let disc_number: Option<i32> = None;
+        let artist_mbid = candidate
+            .candidate_track
+            .artist_credits
+            .first()
+            .map(|c| c.artist_mbid.as_str());
+        let album_mbid = candidate
+            .candidate_release
+            .as_ref()
+            .map(|r| r.mbid.as_str())
+            .or_else(|| {
+                candidate
+                    .candidate_release_group
+                    .as_ref()
+                    .map(|rg| rg.mbid.as_str())
+            });
+
+        let repo = LibraryRepository::new(&self.db);
+        repo.update_track_metadata(
+            track_id,
+            title,
+            artist_name,
+            album_title,
+            release_year,
+            track_number,
+            disc_number,
+            artist_mbid,
+            album_mbid,
+        )
+    }
+
+    /// Asynchronously find artwork candidates across Cover Art Archive, Wikidata, and Fanart.tv.
+    pub async fn find_artwork_candidates(
+        &self,
+        query: &crate::artwork::ArtworkQuery,
+    ) -> Result<Vec<crate::artwork::ArtworkCandidate>> {
+        self.enrichment
+            .find_artwork_candidates(query)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
+
+    /// Download and set candidate artwork as active for an album or artist in SQLite.
+    pub async fn apply_artwork(
+        &self,
+        target_type: &str,
+        target_id: i64,
+        image_url: &str,
+    ) -> Result<crate::artwork::CachedArtworkAsset> {
+        let asset = self
+            .enrichment
+            .download_and_cache_artwork(image_url)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))?;
+
+        let repo = LibraryRepository::new(&self.db);
+        match target_type {
+            "album" => {
+                repo.update_album_artwork(target_id, &asset.full_path)?;
+            }
+            "artist" => {
+                repo.update_artist_artwork(target_id, &asset.full_path)?;
+            }
+            _ => {}
+        }
+
+        Ok(asset)
+    }
+
+    /// Asynchronously find lyrics candidates from online provider.
+    pub async fn find_lyrics_candidates(
+        &self,
+        query: &crate::lyrics_online::LyricsCandidateQuery,
+    ) -> Result<Vec<crate::lyrics_online::LyricsCandidate>> {
+        self.enrichment
+            .find_lyrics_candidates(query)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
+
+    /// Apply chosen lyrics candidate to the persistent SQLite cache.
+    pub fn apply_lyrics_candidate(
+        &self,
+        track_id: Option<i64>,
+        file_path: Option<&str>,
+        candidate: &crate::lyrics_online::LyricsCandidate,
+    ) -> Result<()> {
+        use sonora_lyrics::parser::{LrcLyricsParser, LyricsParser, PlainTextLyricsParser};
+        let lrc_parser = LrcLyricsParser;
+        let plain_parser = PlainTextLyricsParser;
+        let doc = match candidate.sync_type {
+            crate::lyrics_online::LyricsSyncType::LineSynced
+            | crate::lyrics_online::LyricsSyncType::SyllableSynced => lrc_parser
+                .parse(&candidate.raw_content)
+                .or_else(|_| plain_parser.parse(&candidate.raw_content))?,
+            crate::lyrics_online::LyricsSyncType::PlainText => {
+                plain_parser.parse(&candidate.raw_content)?
+            }
+        };
+
+        let repo = LibraryRepository::new(&self.db);
+        repo.save_cached_lyrics(
+            track_id,
+            file_path,
+            &candidate.track_name,
+            Some(&candidate.artist_name),
+            &doc,
+            &candidate.provider_name,
+        )
+    }
+
+    /// Export synchronized/plain lyrics as a `.lrc` sidecar next to the local audio file.
+    pub fn export_lrc_sidecar(
+        &self,
+        track_id: Option<i64>,
+        file_path: Option<&str>,
+        lrc_content: &str,
+    ) -> Result<String> {
+        let path_str = if let Some(fp) = file_path {
+            fp.to_string()
+        } else if let Some(tid) = track_id {
+            let details = self
+                .library
+                .get_track_details(TrackId(tid))?
+                .ok_or_else(|| SonoraError::Library(format!("Track ID {tid} not found")))?;
+            details.file_path
+        } else {
+            return Err(SonoraError::Config(
+                "Either track_id or file_path must be provided to export .lrc".to_string(),
+            ));
+        };
+
+        let audio_path = Path::new(&path_str);
+        let lrc_path = audio_path.with_extension("lrc");
+
+        std::fs::write(&lrc_path, lrc_content).map_err(SonoraError::Io)?;
+
+        Ok(lrc_path.to_string_lossy().to_string())
     }
 }

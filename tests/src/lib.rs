@@ -1,4 +1,6 @@
 pub mod audio_quality;
+pub mod online_enrichment;
+pub mod online_metadata;
 
 #[cfg(test)]
 mod tests {
@@ -347,7 +349,12 @@ mod tests {
 
         // 10. Stop
         app.stop()?;
-        std::thread::sleep(Duration::from_millis(50));
+        for _ in 0..10 {
+            if app.status().state == PlaybackState::Stopped {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(50));
+        }
         assert_eq!(app.status().state, PlaybackState::Stopped);
 
         // Cleanup

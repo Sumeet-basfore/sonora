@@ -1,10 +1,13 @@
 import './tokens.css';
 import './style.css';
 
+import { ArtworkFinderComponent } from './components/ArtworkFinder';
 import { HeaderComponent } from './components/Header';
 import { LibraryViewComponent } from './components/LibraryView';
+import { LyricsManagerComponent } from './components/LyricsManager';
 import { LyricsViewComponent } from './components/LyricsView';
 import { MarketplaceViewComponent } from './components/MarketplaceView';
+import { MatchInspectorComponent } from './components/MatchInspector';
 import { NowPlayingStageComponent } from './components/NowPlayingStage';
 import { PlaybackBarComponent } from './components/PlaybackBar';
 import { QueueDrawerComponent } from './components/QueueDrawer';
@@ -64,6 +67,11 @@ function initializeApp() {
 
       <!-- Customization & Settings Modal Dialog -->
       <div class="modal-root" id="settings-modal-container"></div>
+
+      <!-- Online Enrichment Modal Dialogs (Sonora v0.2 Phase 3) -->
+      <div class="modal-root" id="match-inspector-container"></div>
+      <div class="modal-root" id="artwork-finder-container"></div>
+      <div class="modal-root" id="lyrics-manager-container"></div>
     </div>
   `;
 
@@ -78,6 +86,9 @@ function initializeApp() {
   const visualizerContainer = document.querySelector('#visualizer-container') as HTMLElement;
   const scanModalContainer = document.querySelector('#scan-modal-container') as HTMLElement;
   const settingsModalContainer = document.querySelector('#settings-modal-container') as HTMLElement;
+  const matchInspectorContainer = document.querySelector('#match-inspector-container') as HTMLElement;
+  const artworkFinderContainer = document.querySelector('#artwork-finder-container') as HTMLElement;
+  const lyricsManagerContainer = document.querySelector('#lyrics-manager-container') as HTMLElement;
 
   const sidebar = new SidebarComponent(sidebarContainer);
   const header = new HeaderComponent(headerContainer);
@@ -90,6 +101,9 @@ function initializeApp() {
   const visualizer = new VisualizerComponent(visualizerContainer);
   new ScanModalComponent(scanModalContainer);
   const settingsModal = new SettingsModalComponent(settingsModalContainer);
+  new MatchInspectorComponent(matchInspectorContainer);
+  new ArtworkFinderComponent(artworkFinderContainer);
+  new LyricsManagerComponent(lyricsManagerContainer);
 
   // Setup Keyboard Navigation & Global Shortcuts
   setupKeyboardShortcuts(() => {

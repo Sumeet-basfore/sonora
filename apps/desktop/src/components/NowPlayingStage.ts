@@ -72,6 +72,12 @@ export class NowPlayingStageComponent {
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
             </svg>
           </button>
+          <button class="stage-action-btn stage-enrich-btn" title="Find Metadata (MusicBrainz)" aria-label="Find Metadata">
+            <span style="font-size: 13px;">🏷️</span>
+          </button>
+          <button class="stage-action-btn stage-find-lyrics-btn" title="Find Lyrics (Cmd+L)" aria-label="Find Lyrics">
+            <span style="font-size: 13px;">🎵</span>
+          </button>
           <button class="stage-action-btn stage-lyrics-btn" title="Open Full Screen Lyrics (l)" aria-label="Lyrics">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
@@ -88,7 +94,10 @@ export class NowPlayingStageComponent {
         <div class="stage-mini-lyrics" id="stage-mini-lyrics-box">
           <div class="mini-lyrics-header">
             <span class="mini-lyrics-title">LYRICS</span>
-            <button class="mini-lyrics-expand-btn text-button" title="Expand Full Lyrics">Expand</button>
+            <div style="display: flex; gap: var(--space-2);">
+              <button class="mini-lyrics-find-btn text-button" title="Find Lyrics Online (Cmd+L)">Find</button>
+              <button class="mini-lyrics-expand-btn text-button" title="Expand Full Lyrics">Expand</button>
+            </div>
           </div>
           <div class="mini-lyrics-body">
             <p class="mini-lyric-active" id="mini-lyric-active-line">Sonora High-Fidelity Audio</p>
@@ -116,6 +125,9 @@ export class NowPlayingStageComponent {
   private attachEventListeners() {
     const heartBtn = this.container.querySelector('.stage-heart-btn') as HTMLButtonElement;
     const viewAlbumBtn = this.container.querySelector('.stage-view-album-btn') as HTMLButtonElement;
+    const enrichBtn = this.container.querySelector('.stage-enrich-btn') as HTMLButtonElement;
+    const findLyricsBtn = this.container.querySelector('.stage-find-lyrics-btn') as HTMLButtonElement;
+    const miniFindBtn = this.container.querySelector('.mini-lyrics-find-btn') as HTMLButtonElement;
     const lyricsBtn = this.container.querySelector('.stage-lyrics-btn') as HTMLButtonElement;
     const visBtn = this.container.querySelector('.stage-vis-btn') as HTMLButtonElement;
     const expandLyricsBtn = this.container.querySelector('.mini-lyrics-expand-btn') as HTMLButtonElement;
@@ -134,6 +146,36 @@ export class NowPlayingStageComponent {
         });
       }
     });
+
+    enrichBtn?.addEventListener('click', () => {
+      const track = appState.getStatus().current_track;
+      if (track && track.track_id) {
+        appState.openMatchInspector({
+          trackId: track.track_id,
+          title: track.title,
+          artistName: track.artist,
+          albumTitle: track.album,
+          durationMs: track.duration_ms,
+        });
+      }
+    });
+
+    const triggerFindLyrics = () => {
+      const track = appState.getStatus().current_track;
+      if (track) {
+        appState.openLyricsManager({
+          trackId: track.track_id,
+          filePath: track.file_path,
+          title: track.title,
+          artist: track.artist,
+          album: track.album,
+          durationMs: track.duration_ms,
+        });
+      }
+    };
+
+    findLyricsBtn?.addEventListener('click', triggerFindLyrics);
+    miniFindBtn?.addEventListener('click', triggerFindLyrics);
 
     lyricsBtn?.addEventListener('click', () => {
       window.dispatchEvent(new CustomEvent('sonora-toggle-lyrics'));

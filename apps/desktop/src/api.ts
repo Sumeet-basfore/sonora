@@ -134,6 +134,48 @@ export const api = {
     invokeTauri<string | null>('marketplace_active_theme'),
   marketplaceSetActiveTheme: (id: string | null) =>
     invokeTauri<void>('marketplace_set_active_theme', { id }),
+
+  // Online Enrichment (Sonora v0.2 Phase 3)
+  findMetadataCandidates: (trackId: number) =>
+    invokeTauri<import('./types').RankedCandidateMatch[]>('enrichment_find_metadata', { trackId }),
+
+  applyMetadata: (trackId: number, candidate: import('./types').RankedCandidateMatch) =>
+    invokeTauri<void>('enrichment_apply_metadata', { trackId, candidate }),
+
+  findArtworkCandidates: (query: import('./types').ArtworkQuery) =>
+    invokeTauri<import('./types').ArtworkCandidate[]>('enrichment_find_artwork', { query }),
+
+  applyArtwork: (targetType: string, targetId: number, imageUrl: string) =>
+    invokeTauri<import('./types').CachedArtworkAsset>('enrichment_apply_artwork', {
+      targetType,
+      targetId,
+      imageUrl,
+    }),
+
+  findLyricsCandidates: (query: import('./types').LyricsCandidateQuery) =>
+    invokeTauri<import('./types').LyricsCandidate[]>('enrichment_find_lyrics', { query }),
+
+  applyLyricsCandidate: (
+    candidate: import('./types').LyricsCandidate,
+    trackId?: number | null,
+    filePath?: string | null
+  ) =>
+    invokeTauri<void>('enrichment_apply_lyrics', {
+      candidate,
+      trackId,
+      filePath,
+    }),
+
+  exportLrcSidecar: (
+    lrcContent: string,
+    trackId?: number | null,
+    filePath?: string | null
+  ) =>
+    invokeTauri<string>('enrichment_export_lrc', {
+      lrcContent,
+      trackId,
+      filePath,
+    }),
 };
 
 // In-memory mock for web preview/development
@@ -377,6 +419,110 @@ async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>): Promi
     case 'get_track_artwork':
     case 'get_album_artwork':
       return null as T;
+    case 'enrichment_find_metadata':
+      return [
+        {
+          candidate_track: {
+            recording_mbid: 'mbid-rec-001',
+            release_mbid: 'mbid-rel-001',
+            release_group_mbid: 'mbid-rg-001',
+            position: 1,
+            number: '1',
+            title: 'Get Lucky (feat. Pharrell Williams & Nile Rodgers)',
+            duration_ms: 248000,
+            artist_credits: [
+              { artist_mbid: 'mbid-art-001', name: 'Daft Punk', join_phrase: ' feat. ' },
+              { artist_mbid: 'mbid-art-002', name: 'Pharrell Williams', join_phrase: ' & ' },
+              { artist_mbid: 'mbid-art-003', name: 'Nile Rodgers', join_phrase: null },
+            ],
+            isrcs: ['USQX91300105'],
+          },
+          candidate_release: {
+            mbid: 'mbid-rel-001',
+            release_group_mbid: 'mbid-rg-001',
+            title: 'Random Access Memories',
+            status: 'Official',
+            date: '2013-05-17',
+            country: 'US',
+            barcode: '888837168627',
+            media_format: 'CD',
+            track_count: 13,
+            artist_credits: [{ artist_mbid: 'mbid-art-001', name: 'Daft Punk', join_phrase: null }],
+            label: 'Columbia',
+            catalog_number: '88883716862',
+          },
+          candidate_release_group: {
+            mbid: 'mbid-rg-001',
+            title: 'Random Access Memories',
+            primary_type: 'Album',
+            secondary_types: [],
+            first_release_date: '2013-05-17',
+            artist_credits: [{ artist_mbid: 'mbid-art-001', name: 'Daft Punk', join_phrase: null }],
+          },
+          score_breakdown: {
+            total_score: 0.96,
+            confidence_tier: 'high',
+            title_score: 0.95,
+            artist_score: 1.0,
+            album_score: 1.0,
+            duration_score: 0.98,
+            track_number_score: 1.0,
+            is_exact_shortcut: false,
+            shortcut_reason: null,
+          },
+        },
+      ] as T;
+    case 'enrichment_apply_metadata':
+      return undefined as T;
+    case 'enrichment_find_artwork':
+      return [
+        {
+          id: 'caa-front-001',
+          provider_name: 'Cover Art Archive',
+          source_type: { type: 'CoverArtArchive', details: { release_mbid: 'mbid-rel-001' } },
+          kind: 'FrontCover',
+          original_url: 'https://coverartarchive.org/release/mbid-rel-001/front.jpg',
+          preview_thumbnail_url: 'https://coverartarchive.org/release/mbid-rel-001/front-250.jpg',
+          width: 1200,
+          height: 1200,
+          format: 'JPEG',
+          size_bytes: 524288,
+          match_confidence: 0.98,
+          is_canonical: true,
+        },
+      ] as T;
+    case 'enrichment_apply_artwork':
+      return {
+        key: 'art-mock-001',
+        full_path: '/cache/artwork/art-mock-001.webp',
+        thumbnail_path: '/cache/artwork/art-mock-001_thumb.webp',
+        width: 1200,
+        height: 1200,
+        mime_type: 'image/webp',
+        file_size_bytes: 262144,
+      } as T;
+    case 'enrichment_find_lyrics':
+      return [
+        {
+          candidate_id: 'lrclib-001',
+          source_kind: { type: 'LrclibPublicApi', details: { id: 101 } },
+          provider_name: 'LRCLIB',
+          sync_type: 'LineSynced',
+          track_name: 'Get Lucky',
+          artist_name: 'Daft Punk',
+          album_name: 'Random Access Memories',
+          duration_seconds: 248.0,
+          duration_delta_seconds: 0.0,
+          match_confidence: 0.98,
+          language_code: 'en',
+          is_instrumental: false,
+          raw_content: '[00:05.00] Like the legend of the phoenix\n[00:09.00] All ends with beginnings\n[00:13.00] What keeps the planet spinning\n[00:17.00] The force from the beginning\n[00:21.00] We\'ve come too far to give up who we are\n[00:25.00] So let\'s raise the bar and our cups to the stars\n[00:29.00] She\'s up all night \'til the sun\n[00:31.00] I\'m up all night to get some\n[00:33.00] She\'s up all night for good fun\n[00:35.00] I\'m up all night to get lucky',
+        },
+      ] as T;
+    case 'enrichment_apply_lyrics':
+      return undefined as T;
+    case 'enrichment_export_lrc':
+      return '/music/get_lucky.lrc' as T;
     default:
       return [] as unknown as T;
   }

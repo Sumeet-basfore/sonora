@@ -202,3 +202,156 @@ export interface LyricsPreferences {
   manualOffsetMs: number;
 }
 
+// ---------------------------------------------------------------------------
+// Online Metadata & Enrichment Types (Sonora v0.2)
+// ---------------------------------------------------------------------------
+
+export type ConfidenceTier = 'high' | 'medium' | 'low';
+
+export interface ExternalLink {
+  link_type: string;
+  target_url: string;
+}
+
+export interface OnlineArtistCredit {
+  artist_mbid: string;
+  name: string;
+  join_phrase?: string | null;
+}
+
+export interface OnlineArtist {
+  mbid: string;
+  name: string;
+  sort_name?: string | null;
+  country?: string | null;
+  disambiguation?: string | null;
+  biography?: string | null;
+  external_links: ExternalLink[];
+}
+
+export interface OnlineReleaseGroup {
+  mbid: string;
+  title: string;
+  primary_type?: string | null;
+  secondary_types: string[];
+  first_release_date?: string | null;
+  artist_credits: OnlineArtistCredit[];
+}
+
+export interface OnlineRelease {
+  mbid: string;
+  release_group_mbid?: string | null;
+  title: string;
+  status?: string | null;
+  date?: string | null;
+  country?: string | null;
+  barcode?: string | null;
+  media_format?: string | null;
+  track_count: number;
+  artist_credits: OnlineArtistCredit[];
+  label?: string | null;
+  catalog_number?: string | null;
+}
+
+export interface OnlineTrack {
+  recording_mbid: string;
+  release_mbid?: string | null;
+  release_group_mbid?: string | null;
+  position?: number | null;
+  number?: string | null;
+  title: string;
+  duration_ms?: number | null;
+  artist_credits: OnlineArtistCredit[];
+  isrcs: string[];
+}
+
+export interface MatchScoreBreakdown {
+  total_score: number;
+  confidence_tier: ConfidenceTier;
+  title_score: number;
+  artist_score: number;
+  album_score: number;
+  duration_score: number;
+  track_number_score: number;
+  is_exact_shortcut: boolean;
+  shortcut_reason?: string | null;
+}
+
+export interface RankedCandidateMatch {
+  candidate_track: OnlineTrack;
+  candidate_release?: OnlineRelease | null;
+  candidate_release_group?: OnlineReleaseGroup | null;
+  score_breakdown: MatchScoreBreakdown;
+}
+
+// Artwork Types
+export type ArtworkKind =
+  | 'FrontCover'
+  | 'BackCover'
+  | 'Booklet'
+  | 'Medium'
+  | 'ArtistPortrait'
+  | 'ArtistBackground'
+  | 'ArtistBanner'
+  | 'ArtistLogo'
+  | 'Other';
+
+export interface ArtworkCandidate {
+  id: string;
+  provider_name: string;
+  source_type: Record<string, unknown>;
+  kind: ArtworkKind;
+  original_url: string;
+  preview_thumbnail_url: string;
+  width: number;
+  height: number;
+  format: string;
+  size_bytes?: number | null;
+  match_confidence: number;
+  is_canonical: boolean;
+}
+
+export interface ArtworkQuery {
+  release_mbid?: string | null;
+  release_group_mbid?: string | null;
+  artist_mbid?: string | null;
+  artist_name?: string | null;
+  album_title?: string | null;
+}
+
+export interface CachedArtworkAsset {
+  key: string;
+  full_path: string;
+  thumbnail_path: string;
+  width: number;
+  height: number;
+  mime_type: string;
+  file_size_bytes: number;
+}
+
+// Lyrics Candidate Types
+export type LyricsSyncType = 'SyllableSynced' | 'LineSynced' | 'PlainText';
+
+export interface LyricsCandidate {
+  candidate_id: string;
+  source_kind: Record<string, unknown>;
+  provider_name: string;
+  sync_type: LyricsSyncType;
+  track_name: string;
+  artist_name: string;
+  album_name?: string | null;
+  duration_seconds: number;
+  duration_delta_seconds: number;
+  match_confidence: number;
+  language_code?: string | null;
+  is_instrumental: boolean;
+  raw_content: string;
+}
+
+export interface LyricsCandidateQuery {
+  track_name: string;
+  artist_name?: string | null;
+  album_name?: string | null;
+  duration_seconds?: number | null;
+}
+

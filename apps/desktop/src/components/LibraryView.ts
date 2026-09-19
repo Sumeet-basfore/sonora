@@ -521,6 +521,8 @@ export class LibraryViewComponent {
                 ` : ''}
                 <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                 <div class="col-actions">
+                  <button class="row-meta-btn" title="Find Metadata" aria-label="Find metadata for ${escapeHtml(t.title)}">🏷️</button>
+                  <button class="row-lyrics-btn" title="Find Lyrics" aria-label="Find lyrics for ${escapeHtml(t.title)}">🎵</button>
                   <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>
                 </div>
               </div>
@@ -532,7 +534,7 @@ export class LibraryViewComponent {
       </div>
     `;
 
-    this.attachTrackRowListeners();
+    this.attachTrackRowListeners(tracks);
     this.updatePlayingTrackHighlight();
   }
 
@@ -550,15 +552,17 @@ export class LibraryViewComponent {
     });
   }
 
-  private attachTrackRowListeners() {
-
+  private attachTrackRowListeners(tracks: SearchResult[] = []) {
     const rows = this.container.querySelectorAll('.track-table-row');
     rows.forEach((row) => {
       const trackId = parseInt(row.getAttribute('data-track-id') || '0', 10);
       const playBtn = row.querySelector('.row-play-btn');
       const titleSpan = row.querySelector('.row-title-text');
       const queueBtn = row.querySelector('.row-queue-btn');
+      const metaBtn = row.querySelector('.row-meta-btn');
+      const lyricsBtn = row.querySelector('.row-lyrics-btn');
 
+      const trackObj = tracks.find((t) => t.track_id === trackId);
       const triggerPlay = () => appState.playTrack(trackId);
 
       playBtn?.addEventListener('click', (e) => {
@@ -573,6 +577,34 @@ export class LibraryViewComponent {
         e.stopPropagation();
         await api.enqueueTrack(trackId);
         await appState.refresh();
+      });
+
+      metaBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (trackObj) {
+          appState.openMatchInspector({
+            trackId: trackObj.track_id,
+            title: trackObj.title,
+            artistName: trackObj.artist_name,
+            albumTitle: trackObj.album_title,
+            durationMs: trackObj.duration_ms,
+            trackNumber: trackObj.track_number,
+          });
+        }
+      });
+
+      lyricsBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (trackObj) {
+          appState.openLyricsManager({
+            trackId: trackObj.track_id,
+            filePath: trackObj.file_path,
+            title: trackObj.title,
+            artist: trackObj.artist_name,
+            album: trackObj.album_title,
+            durationMs: trackObj.duration_ms,
+          });
+        }
       });
     });
   }
@@ -626,6 +658,8 @@ export class LibraryViewComponent {
                 <div class="col-album">${escapeHtml(t.album_title || 'Unknown Album')}</div>
                 <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                 <div class="col-actions">
+                  <button class="row-meta-btn" title="Find Metadata" aria-label="Find metadata for ${escapeHtml(t.title)}">🏷️</button>
+                  <button class="row-lyrics-btn" title="Find Lyrics" aria-label="Find lyrics for ${escapeHtml(t.title)}">🎵</button>
                   <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>
                 </div>
               </div>
@@ -636,7 +670,7 @@ export class LibraryViewComponent {
       </div>
     `;
 
-    this.attachTrackRowListeners();
+    this.attachTrackRowListeners(results);
   }
 
   // --- 5. Artist Detail View ---
@@ -653,6 +687,16 @@ export class LibraryViewComponent {
           <span class="meta-badge">ARTIST</span>
           <h1 class="artist-name-heading">${escapeHtml(artistName)}</h1>
           <div class="artist-meta-stats">${tracks.length} tracks in collection</div>
+          <div style="margin-top: var(--space-3);">
+            <button class="button button-secondary find-artist-art-btn" title="Find artist imagery online">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                <circle cx="8.5" cy="8.5" r="1.5"/>
+                <polyline points="21 15 16 10 5 21"/>
+              </svg>
+              <span>Find Artist Art</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -674,11 +718,13 @@ export class LibraryViewComponent {
                   <button class="row-play-btn" title="Play" aria-label="Play ${escapeHtml(t.title)}">▶</button>
                 </div>
                 <div class="col-title">
-                  <span class="row-title-text">${escapeHtml(t.title)}</span>
+                  <span class="row-track-title">${escapeHtml(t.title)}</span>
                 </div>
                 <div class="col-album">${escapeHtml(t.album_title || 'Unknown Album')}</div>
                 <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                 <div class="col-actions">
+                  <button class="row-meta-btn" title="Find Metadata" aria-label="Find metadata for ${escapeHtml(t.title)}">🏷️</button>
+                  <button class="row-lyrics-btn" title="Find Lyrics" aria-label="Find lyrics for ${escapeHtml(t.title)}">🎵</button>
                   <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>
                 </div>
               </div>
@@ -689,6 +735,15 @@ export class LibraryViewComponent {
       </div>
     `;
 
-    this.attachTrackRowListeners();
+    const findArtistArtBtn = this.container.querySelector('.find-artist-art-btn');
+    findArtistArtBtn?.addEventListener('click', () => {
+      appState.openArtworkFinder({
+        targetType: 'artist',
+        targetId: artistId,
+        title: artistName,
+      });
+    });
+
+    this.attachTrackRowListeners(tracks);
   }
 }

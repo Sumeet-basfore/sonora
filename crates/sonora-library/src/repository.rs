@@ -1060,6 +1060,432 @@ impl<'a> LibraryRepository<'a> {
 
         Ok(())
     }
+
+    // -----------------------------------------------------------------------
+    // Online Enrichment & Provider Caching
+    // -----------------------------------------------------------------------
+
+    /// Retrieve raw entity payload from online_metadata_cache.
+    pub fn get_online_metadata_cache(
+        &self,
+        cache_key: &str,
+        allow_stale: bool,
+    ) -> Result<Option<String>> {
+        let conn = self.db.lock_conn()?;
+        let query = if allow_stale {
+            "SELECT payload_json FROM online_metadata_cache WHERE cache_key = ?1"
+        } else {
+            "SELECT payload_json FROM online_metadata_cache WHERE cache_key = ?1 AND expires_at > unixepoch()"
+        };
+
+        let mut stmt = conn
+            .prepare(query)
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        let mut rows = stmt
+            .query(params![cache_key])
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        if let Some(row) = rows
+            .next()
+            .map_err(|e| SonoraError::Database(e.to_string()))?
+        {
+            let payload: String = row
+                .get(0)
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+            Ok(Some(payload))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Store raw entity payload into online_metadata_cache.
+    pub fn set_online_metadata_cache(
+        &self,
+        cache_key: &str,
+        entity_type: &str,
+        payload_json: &str,
+        provider: &str,
+        ttl_secs: u64,
+    ) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            r#"
+            INSERT INTO online_metadata_cache (cache_key, entity_type, payload_json, provider, expires_at)
+            VALUES (?1, ?2, ?3, ?4, unixepoch() + ?5)
+            ON CONFLICT(cache_key) DO UPDATE SET
+                entity_type = excluded.entity_type,
+                payload_json = excluded.payload_json,
+                provider = excluded.provider,
+                created_at = unixepoch(),
+                expires_at = excluded.expires_at
+            "#,
+            params![cache_key, entity_type, payload_json, provider, ttl_secs as i64],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    /// Retrieve ranked metadata candidates from metadata_candidates_cache.
+    pub fn get_metadata_candidates_cache(
+        &self,
+        query_fingerprint: &str,
+        allow_stale: bool,
+    ) -> Result<Option<String>> {
+        let conn = self.db.lock_conn()?;
+        let query = if allow_stale {
+            "SELECT candidates_json FROM metadata_candidates_cache WHERE query_fingerprint = ?1"
+        } else {
+            "SELECT candidates_json FROM metadata_candidates_cache WHERE query_fingerprint = ?1 AND expires_at > unixepoch()"
+        };
+
+        let mut stmt = conn
+            .prepare(query)
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        let mut rows = stmt
+            .query(params![query_fingerprint])
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        if let Some(row) = rows
+            .next()
+            .map_err(|e| SonoraError::Database(e.to_string()))?
+        {
+            let payload: String = row
+                .get(0)
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+            Ok(Some(payload))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Store ranked metadata candidates into metadata_candidates_cache.
+    pub fn set_metadata_candidates_cache(
+        &self,
+        query_fingerprint: &str,
+        candidates_json: &str,
+        ttl_secs: u64,
+    ) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            r#"
+            INSERT INTO metadata_candidates_cache (query_fingerprint, candidates_json, expires_at)
+            VALUES (?1, ?2, unixepoch() + ?3)
+            ON CONFLICT(query_fingerprint) DO UPDATE SET
+                candidates_json = excluded.candidates_json,
+                created_at = unixepoch(),
+                expires_at = excluded.expires_at
+            "#,
+            params![query_fingerprint, candidates_json, ttl_secs as i64],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    /// Retrieve artwork candidates from online_artwork_cache.
+    pub fn get_online_artwork_cache(
+        &self,
+        cache_key: &str,
+        allow_stale: bool,
+    ) -> Result<Option<String>> {
+        let conn = self.db.lock_conn()?;
+        let query = if allow_stale {
+            "SELECT candidates_json FROM online_artwork_cache WHERE cache_key = ?1"
+        } else {
+            "SELECT candidates_json FROM online_artwork_cache WHERE cache_key = ?1 AND expires_at > unixepoch()"
+        };
+
+        let mut stmt = conn
+            .prepare(query)
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        let mut rows = stmt
+            .query(params![cache_key])
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        if let Some(row) = rows
+            .next()
+            .map_err(|e| SonoraError::Database(e.to_string()))?
+        {
+            let payload: String = row
+                .get(0)
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+            Ok(Some(payload))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Store artwork candidates into online_artwork_cache.
+    pub fn set_online_artwork_cache(
+        &self,
+        cache_key: &str,
+        entity_type: &str,
+        candidates_json: &str,
+        provider: &str,
+        ttl_secs: u64,
+    ) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            r#"
+            INSERT INTO online_artwork_cache (cache_key, entity_type, candidates_json, provider, expires_at)
+            VALUES (?1, ?2, ?3, ?4, unixepoch() + ?5)
+            ON CONFLICT(cache_key) DO UPDATE SET
+                entity_type = excluded.entity_type,
+                candidates_json = excluded.candidates_json,
+                provider = excluded.provider,
+                created_at = unixepoch(),
+                expires_at = excluded.expires_at
+            "#,
+            params![cache_key, entity_type, candidates_json, provider, ttl_secs as i64],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    /// Retrieve lyrics candidates from lyrics_candidates_cache.
+    pub fn get_lyrics_candidates_cache(
+        &self,
+        query_fingerprint: &str,
+        allow_stale: bool,
+    ) -> Result<Option<String>> {
+        let conn = self.db.lock_conn()?;
+        let query = if allow_stale {
+            "SELECT candidates_json FROM lyrics_candidates_cache WHERE query_fingerprint = ?1"
+        } else {
+            "SELECT candidates_json FROM lyrics_candidates_cache WHERE query_fingerprint = ?1 AND expires_at > unixepoch()"
+        };
+
+        let mut stmt = conn
+            .prepare(query)
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        let mut rows = stmt
+            .query(params![query_fingerprint])
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        if let Some(row) = rows
+            .next()
+            .map_err(|e| SonoraError::Database(e.to_string()))?
+        {
+            let payload: String = row
+                .get(0)
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+            Ok(Some(payload))
+        } else {
+            Ok(None)
+        }
+    }
+
+    /// Store lyrics candidates into lyrics_candidates_cache.
+    pub fn set_lyrics_candidates_cache(
+        &self,
+        query_fingerprint: &str,
+        candidates_json: &str,
+        ttl_secs: u64,
+    ) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            r#"
+            INSERT INTO lyrics_candidates_cache (query_fingerprint, candidates_json, expires_at)
+            VALUES (?1, ?2, unixepoch() + ?3)
+            ON CONFLICT(query_fingerprint) DO UPDATE SET
+                candidates_json = excluded.candidates_json,
+                created_at = unixepoch(),
+                expires_at = excluded.expires_at
+            "#,
+            params![query_fingerprint, candidates_json, ttl_secs as i64],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        Ok(())
+    }
+
+    /// Purge expired cache entries across all online cache tables.
+    pub fn purge_expired_online_cache(&self) -> Result<usize> {
+        let conn = self.db.lock_conn()?;
+        let mut total = 0;
+        total += conn
+            .execute(
+                "DELETE FROM online_metadata_cache WHERE expires_at <= unixepoch()",
+                [],
+            )
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        total += conn
+            .execute(
+                "DELETE FROM metadata_candidates_cache WHERE expires_at <= unixepoch()",
+                [],
+            )
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        total += conn
+            .execute(
+                "DELETE FROM online_artwork_cache WHERE expires_at <= unixepoch()",
+                [],
+            )
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+        total += conn
+            .execute(
+                "DELETE FROM lyrics_candidates_cache WHERE expires_at <= unixepoch()",
+                [],
+            )
+            .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        Ok(total)
+    }
+
+    /// Update track metadata directly in the SQLite database and refresh search indexes.
+    /// This is safe and non-destructive: it never modifies physical audio files on disk.
+    #[allow(clippy::too_many_arguments)]
+    pub fn update_track_metadata(
+        &self,
+        track_id: TrackId,
+        title: &str,
+        artist_name: Option<&str>,
+        album_title: Option<&str>,
+        release_year: Option<i32>,
+        track_number: Option<i32>,
+        disc_number: Option<i32>,
+        artist_mbid: Option<&str>,
+        album_mbid: Option<&str>,
+    ) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+
+        let artist_id = if let Some(artist) = artist_name {
+            if !artist.trim().is_empty() {
+                conn.execute(
+                    "INSERT INTO artists (name) VALUES (?1) ON CONFLICT(name) DO NOTHING",
+                    params![artist.trim()],
+                )
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+                let aid: i64 = conn
+                    .query_row(
+                        "SELECT id FROM artists WHERE name = ?1 COLLATE NOCASE",
+                        params![artist.trim()],
+                        |r| r.get(0),
+                    )
+                    .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+                if let Some(mbid) = artist_mbid {
+                    let _ = conn.execute(
+                        "UPDATE artists SET musicbrainz_id = ?1 WHERE id = ?2 AND (musicbrainz_id IS NULL OR musicbrainz_id = '')",
+                        params![mbid, aid],
+                    );
+                }
+
+                Some(aid)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        let album_id = if let Some(album) = album_title {
+            if !album.trim().is_empty() {
+                conn.execute(
+                    "INSERT INTO albums (title, artist_id, release_year) VALUES (?1, ?2, ?3) ON CONFLICT DO NOTHING",
+                    params![album.trim(), artist_id, release_year],
+                )
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+                let alid: i64 = match artist_id {
+                    Some(aid) => conn.query_row(
+                        "SELECT id FROM albums WHERE title = ?1 COLLATE NOCASE AND artist_id = ?2",
+                        params![album.trim(), aid],
+                        |r| r.get(0),
+                    ),
+                    None => conn.query_row(
+                        "SELECT id FROM albums WHERE title = ?1 COLLATE NOCASE AND artist_id IS NULL",
+                        params![album.trim()],
+                        |r| r.get(0),
+                    ),
+                }
+                .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+                if let Some(mbid) = album_mbid {
+                    let _ = conn.execute(
+                        "UPDATE albums SET musicbrainz_id = ?1 WHERE id = ?2 AND (musicbrainz_id IS NULL OR musicbrainz_id = '')",
+                        params![mbid, alid],
+                    );
+                }
+                if let Some(year) = release_year {
+                    let _ = conn.execute(
+                        "UPDATE albums SET release_year = ?1 WHERE id = ?2 AND release_year IS NULL",
+                        params![year, alid],
+                    );
+                }
+
+                Some(alid)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+
+        conn.execute(
+            r#"
+            UPDATE tracks
+            SET title = ?1,
+                artist_id = ?2,
+                album_id = ?3,
+                track_number = COALESCE(?4, track_number),
+                disc_number = COALESCE(?5, disc_number)
+            WHERE id = ?6
+            "#,
+            params![
+                title.trim(),
+                artist_id,
+                album_id,
+                track_number,
+                disc_number,
+                track_id.0
+            ],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+
+        // Refresh FTS5 index
+        let _ = conn.execute(
+            "DELETE FROM fts_tracks WHERE track_id = ?1",
+            params![track_id.0],
+        );
+        let _ = conn.execute(
+            r#"
+            INSERT INTO fts_tracks (track_id, title, artist_name, album_title, genre_names)
+            SELECT t.id, t.title, ar.name, al.title, ''
+            FROM tracks t
+            LEFT JOIN artists ar ON t.artist_id = ar.id
+            LEFT JOIN albums al ON t.album_id = al.id
+            WHERE t.id = ?1
+            "#,
+            params![track_id.0],
+        );
+
+        Ok(())
+    }
+
+    /// Update the cover art URI for an album.
+    pub fn update_album_artwork(&self, album_id: i64, artwork_uri: &str) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            "UPDATE albums SET cover_art_uri = ?1 WHERE id = ?2",
+            params![artwork_uri, album_id],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+        Ok(())
+    }
+
+    /// Update the portrait image URI for an artist.
+    pub fn update_artist_artwork(&self, artist_id: i64, image_uri: &str) -> Result<()> {
+        let conn = self.db.lock_conn()?;
+        conn.execute(
+            "UPDATE artists SET image_uri = ?1 WHERE id = ?2",
+            params![image_uri, artist_id],
+        )
+        .map_err(|e| SonoraError::Database(e.to_string()))?;
+        Ok(())
+    }
 }
 
 fn to_base64(data: &[u8]) -> String {
