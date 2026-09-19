@@ -54,8 +54,9 @@ rtrb = "0.4"
 # Database & search
 rusqlite = { version = "0.40", features = ["bundled-full"] }
 
-# DSP & FFT
+# DSP & FFT & Resampling
 rustfft = "6.4"
+rubato = "5.0"
 
 # Image processing for artwork & thumbnails
 image = { version = "0.25", default-features = false, features = ["jpeg", "png"] }

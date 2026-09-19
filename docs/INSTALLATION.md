@@ -72,7 +72,6 @@ Sonora includes two standalone command-line tools in a single archive:
 2. Extract the archive:
    ```sh
    tar -xzf Sonora-v*-terminal.tar.gz
-   cd sonora-terminal
    ```
 3. Run the tools directly:
    ```sh

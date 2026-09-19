@@ -75,6 +75,14 @@ impl ParametricEqualizer {
         }
     }
 
+    pub fn configs(&self) -> &[EqBandConfig; NUM_EQ_BANDS] {
+        &self.configs
+    }
+
+    pub fn bands(&self) -> &[BiquadFilter; NUM_EQ_BANDS] {
+        &self.bands
+    }
+
     pub fn reset(&mut self) {
         for band in &mut self.bands {
             band.reset();

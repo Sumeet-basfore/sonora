@@ -168,21 +168,23 @@ EODOC
 
 ARCHIVE_NAME="Sonora-v${VERSION}-${OS}-${ARCH}-terminal"
 
+cp "$BUNDLE_DIR"/* "$STAGE_DIR/" 2>/dev/null || true
+
 if [[ "$OS" == "windows" ]]; then
   OUT_FILE="$OUT_DIR/${ARCHIVE_NAME}.zip"
   if command -v zip >/dev/null 2>&1; then
-    (cd "$STAGE_DIR" && zip -r -q "$OLDPWD/$OUT_FILE" sonora-terminal)
+    (cd "$STAGE_DIR" && zip -r -q "$OLDPWD/$OUT_FILE" sonora-terminal sonora.exe sonora-tui.exe README.txt 2>/dev/null || (cd "$STAGE_DIR" && zip -r -q "$OLDPWD/$OUT_FILE" .))
   elif command -v 7z >/dev/null 2>&1; then
-    (cd "$STAGE_DIR" && 7z a -tzip "$OLDPWD/$OUT_FILE" sonora-terminal >/dev/null)
+    (cd "$STAGE_DIR" && 7z a -tzip "$OLDPWD/$OUT_FILE" . >/dev/null)
   elif command -v python3 >/dev/null 2>&1; then
-    python3 -c "import shutil; shutil.make_archive('$OUT_DIR/${ARCHIVE_NAME}', 'zip', '$STAGE_DIR', 'sonora-terminal')"
+    python3 -c "import shutil; shutil.make_archive('$OUT_DIR/${ARCHIVE_NAME}', 'zip', '$STAGE_DIR')"
   else
     echo "Error: No zip tool found (zip, 7z, or python3)" >&2
     exit 1
   fi
 else
   OUT_FILE="$OUT_DIR/${ARCHIVE_NAME}.tar.gz"
-  tar -czf "$OUT_FILE" -C "$STAGE_DIR" sonora-terminal
+  tar -czf "$OUT_FILE" -C "$STAGE_DIR" sonora sonora-tui README.txt sonora-terminal
 fi
 
 echo "Created terminal package: $OUT_FILE"

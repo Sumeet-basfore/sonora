@@ -8,6 +8,7 @@ export const LAYOUT_SCHEMA_URI = 'https://sonora.audio/schemas/v1/layout.json';
 export type RegionId =
   | 'sidebar'
   | 'library'
+  | 'nowPlaying'
   | 'queue'
   | 'playbackBar'
   | 'visualizer'
@@ -16,6 +17,7 @@ export type RegionId =
 export interface RegionVisibility {
   sidebar: boolean;
   library: boolean;
+  nowPlaying: boolean;
   queue: boolean;
   playbackBar: boolean;
   visualizer: boolean;
@@ -35,6 +37,7 @@ export interface LayoutDefinition {
 export const ALL_REGION_IDS: RegionId[] = [
   'sidebar',
   'library',
+  'nowPlaying',
   'queue',
   'playbackBar',
   'visualizer',

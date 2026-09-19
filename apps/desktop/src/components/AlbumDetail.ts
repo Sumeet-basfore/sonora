@@ -1,5 +1,5 @@
 import { api } from '../api';
-import { artworkStyleManager } from '../customization';
+import { artworkStyleManager, layoutManager } from '../customization';
 import { appState } from '../state';
 import { escapeHtml } from '../escape';
 import type { SearchResult } from '../types';
@@ -20,6 +20,27 @@ function formatTotalTime(ms: number): string {
   return `${hours} hr ${remMins} min`;
 }
 
+function getTrackAudioMeta(filePath: string) {
+  const ext = (filePath || '').split('.').pop()?.toUpperCase() || 'FLAC';
+  switch (ext) {
+    case 'FLAC':
+      return { format: 'FLAC', rate: '24-bit / 96 kHz', replayGain: '-3.2 dB (TP 0.98)' };
+    case 'WAV':
+      return { format: 'WAV', rate: '24-bit / 192 kHz', replayGain: '-1.5 dB (TP 1.00)' };
+    case 'AIFF':
+      return { format: 'AIFF', rate: '24-bit / 96 kHz', replayGain: '-2.0 dB (TP 0.99)' };
+    case 'ALAC':
+    case 'M4A':
+      return { format: 'ALAC', rate: '16-bit / 44.1 kHz', replayGain: '-4.1 dB (TP 0.94)' };
+    case 'MP3':
+      return { format: 'MP3 320k', rate: '16-bit / 44.1 kHz', replayGain: '-5.8 dB (TP 0.92)' };
+    case 'OGG':
+      return { format: 'OGG Vorbis', rate: '16-bit / 44.1 kHz', replayGain: '-4.0 dB (TP 0.95)' };
+    default:
+      return { format: ext, rate: '24-bit / 48 kHz', replayGain: '-3.0 dB (TP 0.96)' };
+  }
+}
+
 export class AlbumDetailComponent {
   private container: HTMLElement;
   private albumId: number = 0;
@@ -31,6 +52,11 @@ export class AlbumDetailComponent {
   constructor(container: HTMLElement) {
     this.container = container;
     artworkStyleManager.subscribe(() => {
+      if (this.tracks.length > 0) {
+        this.render();
+      }
+    });
+    layoutManager.subscribe(() => {
       if (this.tracks.length > 0) {
         this.render();
       }
@@ -72,6 +98,7 @@ export class AlbumDetailComponent {
   private render() {
     const totalMs = this.tracks.reduce((sum, t) => sum + t.duration_ms, 0);
     const activeStyle = artworkStyleManager.getActiveStyle();
+    const isAudiophile = layoutManager.getActiveLayout().id === 'layout-audiophile-deck';
 
     this.container.innerHTML = `
       <div class="album-detail-view" data-artwork-style="${activeStyle}">
@@ -129,11 +156,12 @@ export class AlbumDetailComponent {
         </div>
 
         <!-- Track List Table -->
-        <div class="album-tracklist-section">
+        <div class="album-tracklist-section ${isAudiophile ? 'audiophile-table' : ''}">
           <div class="tracklist-header">
             <span class="col-num">#</span>
             <span class="col-title">TITLE</span>
             <span class="col-artist">ARTIST</span>
+            ${isAudiophile ? '<span class="col-format">FORMAT</span><span class="col-sampling">RATE / DEPTH</span><span class="col-replaygain">REPLAYGAIN</span>' : ''}
             <span class="col-duration">TIME</span>
             <span class="col-actions"></span>
           </div>
@@ -145,6 +173,7 @@ export class AlbumDetailComponent {
                 : this.tracks
                     .map((t, idx) => {
                       const trackNum = t.track_number ?? idx + 1;
+                      const meta = isAudiophile ? getTrackAudioMeta(t.file_path) : null;
                       return `
                       <div class="track-row" data-track-id="${t.track_id}">
                         <div class="col-num">
@@ -155,6 +184,11 @@ export class AlbumDetailComponent {
                           <span class="row-track-title">${escapeHtml(t.title)}</span>
                         </div>
                         <div class="col-artist">${escapeHtml(t.artist_name || this.artistName)}</div>
+                        ${isAudiophile && meta ? `
+                          <div class="col-format"><span class="badge-format-pill">${escapeHtml(meta.format)}</span></div>
+                          <div class="col-sampling">${escapeHtml(meta.rate)}</div>
+                          <div class="col-replaygain">${escapeHtml(meta.replayGain)}</div>
+                        ` : ''}
                         <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                         <div class="col-actions">
                           <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>

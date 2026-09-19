@@ -45,37 +45,37 @@ export class SidebarComponent {
         <!-- Navigation Menu -->
         <nav class="sidebar-nav" aria-label="Library Navigation">
           <div class="nav-section-label">LIBRARY</div>
-          <button class="nav-item nav-albums active" data-view="albums">
+          <button class="nav-item nav-albums active" data-view="albums" title="Albums (1)" aria-label="Albums">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-5.5c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z"/>
             </svg>
-            <span>Albums</span>
+            <span class="nav-label">Albums</span>
           </button>
-          <button class="nav-item nav-artists" data-view="artists">
+          <button class="nav-item nav-artists" data-view="artists" title="Artists (2)" aria-label="Artists">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
             </svg>
-            <span>Artists</span>
+            <span class="nav-label">Artists</span>
           </button>
-          <button class="nav-item nav-tracks" data-view="tracks">
+          <button class="nav-item nav-tracks" data-view="tracks" title="Tracks (3)" aria-label="Tracks">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
             </svg>
-            <span>Tracks</span>
+            <span class="nav-label">Tracks</span>
           </button>
-          <button class="nav-item nav-extensions" data-view="marketplace">
+          <button class="nav-item nav-extensions" data-view="marketplace" title="Extensions & Marketplace" aria-label="Extensions">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5C13 2.12 11.88 1 10.5 1S8 2.12 8 3.5V5H4c-1.1 0-1.99.9-1.99 2v3.8H1.5c-.83 0-1.5.67-1.5 1.5v4c0 1.1.9 2 2 2h4.8c.41 1.16 1.52 2 2.7 2h5c1.38 0 2.5-1.12 2.5-2.5V11h3.5c.83 0 1.5-.67 1.5-1.5v-1c0-.28-.22-.5-.5-.5z"/>
             </svg>
-            <span>Extensions</span>
+            <span class="nav-label">Extensions</span>
           </button>
 
-          <div class="nav-section-label" style="margin-top: 16px;">PREFERENCES</div>
-          <button class="nav-item nav-settings" data-action="settings">
+          <div class="nav-section-label nav-pref-label" style="margin-top: 16px;">PREFERENCES</div>
+          <button class="nav-item nav-settings" data-action="settings" title="Customization & Settings (,)" aria-label="Settings">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
             </svg>
-            <span>Customization</span>
+            <span class="nav-label">Customization</span>
           </button>
         </nav>
 

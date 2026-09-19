@@ -80,8 +80,10 @@ export class SettingsModalComponent {
   private render() {
     if (!this.isOpen) {
       this.container.innerHTML = '';
+      this.container.classList.remove('visible');
       return;
     }
+    this.container.classList.add('visible');
 
     const currentTheme = themeEngine.getActiveTheme();
     const availableThemes = themeEngine.getAvailableThemes();
@@ -282,6 +284,13 @@ export class SettingsModalComponent {
                     <div class="region-toggle-meta">
                       <span class="region-name">Library Viewport</span>
                       <span class="region-desc">Central grid and list views of your music library</span>
+                    </div>
+                  </label>
+                  <label class="region-toggle-item">
+                    <input type="checkbox" data-region="nowPlaying" ${currentRegions.nowPlaying ? 'checked' : ''} />
+                    <div class="region-toggle-meta">
+                      <span class="region-name">Now Playing & Context Stage</span>
+                      <span class="region-desc">Right-hand stage with large artwork, audio badges, and mini lyrics</span>
                     </div>
                   </label>
                   <label class="region-toggle-item">

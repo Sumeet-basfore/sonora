@@ -6,60 +6,89 @@ Local-first desktop and terminal music player: a Rust audio engine driving a mod
 
 ## 📥 Download
 
-Pre-built releases are ready to download and run without compiling or installing developer tools.
+Pre-built releases are ready to download and run without compiling or installing developer tools. Compiling Sonora is completely **optional** for normal users.
 
-👉 **[Download the Latest Release (v0.1.0)](https://github.com/Sumeet-basfore/sonora/releases/latest)**
+👉 **[Download Sonora v0.1.0 Releases](https://github.com/Sumeet-basfore/sonora/releases/latest)**
 
-### Desktop Applications (Graphical)
+### Desktop Applications
+* **Linux (x86_64)** *(Primary — Fully Tested)*
+  * Universal AppImage: `Sonora-v0.1.0-linux-x86_64.AppImage`
+  * Debian / Ubuntu (.deb): `Sonora-v0.1.0-linux-x86_64.deb`
+* **Windows (x86_64)** *(Best-Effort)*
+  * MSI Installer: `Sonora-v0.1.0-windows-x86_64.msi`
+  * Setup Executable: `Sonora-v0.1.0-windows-x86_64.exe`
+* **macOS** *(Best-Effort)*
+  * Apple Silicon (M1/M2/M3/M4): `Sonora-v0.1.0-macos-aarch64.dmg`
+  * Intel (x86_64): `Sonora-v0.1.0-macos-x86_64.dmg`
 
-| Operating System | Package Format | Download Links |
-|---|---|---|
-| **Linux (x86_64)** *(Primary)* | Universal AppImage<br>Debian / Ubuntu (.deb) | [AppImage](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Debian Package (.deb)](https://github.com/Sumeet-basfore/sonora/releases/latest) |
-| **Windows (x86_64)** *(Best-effort)* | Windows Installer (.msi)<br>Setup Executable (.exe) | [MSI Installer](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Setup EXE](https://github.com/Sumeet-basfore/sonora/releases/latest) |
-| **macOS** *(Best-effort)* | Apple Silicon (M1/M2/M3)<br>Intel (x86_64) | [Apple Silicon DMG](https://github.com/Sumeet-basfore/sonora/releases/latest)<br>[Intel DMG](https://github.com/Sumeet-basfore/sonora/releases/latest) |
-
-### Terminal Applications (`sonora` CLI + `sonora-tui`)
-
-Includes both the full-screen terminal player (`sonora-tui`) and the scriptable command-line utility (`sonora`) in a single bundle:
-
+### Terminal Tools (`sonora` CLI + `sonora-tui`)
+Standalone bundles containing `sonora`, `sonora-tui`, and `README.txt`:
 * **Linux (x86_64):** `Sonora-v0.1.0-linux-x86_64-terminal.tar.gz`
 * **Windows (x86_64):** `Sonora-v0.1.0-windows-x86_64-terminal.zip`
-* **macOS (Apple Silicon & Intel):** `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz` / `Sonora-v0.1.0-macos-x86_64-terminal.tar.gz`
+* **macOS (Apple Silicon):** `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz`
+* **macOS (Intel):** `Sonora-v0.1.0-macos-x86_64-terminal.tar.gz`
+
+### Developers
+* **[Build from Source](#-for-developers-build-from-source)** *(Optional)*
 
 ---
 
-## 🚀 Quick Install & Run
+## 🚀 Quick Installation
 
-### Desktop GUI
+### Linux Desktop GUI
+* **AppImage (Universal):**
+  ```sh
+  chmod +x Sonora-v0.1.0-linux-x86_64.AppImage
+  ./Sonora-v0.1.0-linux-x86_64.AppImage
+  ```
+* **Debian / Ubuntu (.deb):**
+  ```sh
+  sudo dpkg -i Sonora-v0.1.0-linux-x86_64.deb
+  ```
 
-#### Linux AppImage (Universal)
+### Linux Terminal Tools
 ```sh
-chmod +x Sonora-v*-linux-x86_64.AppImage
-./Sonora-v*-linux-x86_64.AppImage
+tar -xzf Sonora-v0.1.0-linux-x86_64-terminal.tar.gz
+./sonora-tui          # Interactive full-screen terminal player
+./sonora status       # Scriptable CLI
 ```
 
-#### Linux Debian/Ubuntu (.deb)
+### Windows Desktop GUI
+1. Download `Sonora-v0.1.0-windows-x86_64.msi` or `Sonora-v0.1.0-windows-x86_64.exe`.
+2. Run the installer and launch Sonora from the Start Menu.
+
+### Windows Terminal Tools
+1. Download and extract `Sonora-v0.1.0-windows-x86_64-terminal.zip`.
+2. In PowerShell or Command Prompt:
+   ```powershell
+   .\sonora-tui.exe
+   .\sonora.exe status
+   ```
+
+### macOS Desktop GUI
+1. Download `Sonora-v0.1.0-macos-aarch64.dmg` (Apple Silicon) or `Sonora-v0.1.0-macos-x86_64.dmg` (Intel).
+2. Open the `.dmg` and drag `Sonora.app` to **Applications**.
+3. *(Note: Because binaries are not yet notarized by Apple, right-click `Sonora.app` and choose **Open** on first launch).*
+
+### macOS Terminal Tools
 ```sh
-sudo dpkg -i Sonora-v*-linux-x86_64.deb
-```
-
-#### Windows & macOS
-* **Windows:** Run the `.msi` or `.exe` installer.
-* **macOS:** Open the `.dmg` and drag `Sonora.app` to Applications.
-
-### Terminal (CLI & TUI)
-
-Extract the archive and run directly:
-```sh
-# Run the full-screen terminal player:
+tar -xzf Sonora-v0.1.0-macos-*-terminal.tar.gz
 ./sonora-tui
-
-# Run CLI status or scan commands:
 ./sonora status
-./sonora scan /path/to/music
 ```
 
-📖 Full step-by-step setup and PATH instructions: **[docs/INSTALLATION.md](docs/INSTALLATION.md)**
+### Checksum Verification
+Verify release integrity using `checksums.txt`:
+* **Linux / macOS:**
+  ```sh
+  sha256sum -c checksums.txt
+  ```
+* **Windows (PowerShell):**
+  ```powershell
+  Get-FileHash Sonora-v0.1.0-windows-x86_64.msi -Algorithm SHA256
+  ```
+
+📖 Comprehensive step-by-step setup and PATH instructions: **[docs/INSTALLATION.md](docs/INSTALLATION.md)**
 
 ---
 

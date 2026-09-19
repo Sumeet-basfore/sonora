@@ -9,3 +9,5 @@ authors.workspace = true
 sonora-common.workspace = true
 serde.workspace = true
 rustfft.workspace = true
+rubato.workspace = true
+tracing.workspace = true

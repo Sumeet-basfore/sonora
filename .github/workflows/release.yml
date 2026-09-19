@@ -43,7 +43,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build TypeScript frontend
         run: |
@@ -109,7 +109,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build desktop frontend
         run: |
@@ -191,7 +191,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build desktop frontend
         run: |
@@ -205,6 +205,13 @@ jobs:
       - name: Build Terminal Binaries (CLI & TUI)
         run: |
           cargo build --release --bin sonora --bin sonora-tui
+
+      - name: Sanity check Windows binaries
+        shell: bash
+        run: |
+          ./target/release/sonora.exe --version
+          ./target/release/sonora.exe status
+          ./target/release/sonora-tui.exe --version
 
       - name: Package Windows Artifacts
         shell: bash
@@ -239,13 +246,15 @@ jobs:
   build-macos:
     name: Build macOS Packages (${{ matrix.arch }})
     needs: test
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - target: aarch64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
             arch: aarch64
-          - target: x86_64-apple-darwin
+          - os: macos-13
+            target: x86_64-apple-darwin
             arch: x86_64
     steps:
       - name: Checkout repository
@@ -269,7 +278,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Build desktop frontend
         run: |
@@ -284,6 +293,12 @@ jobs:
         run: |
           cargo build --release --target ${{ matrix.target }} --bin sonora --bin sonora-tui
 
+      - name: Sanity check macOS binaries
+        run: |
+          ./target/${{ matrix.target }}/release/sonora --version
+          ./target/${{ matrix.target }}/release/sonora status
+          ./target/${{ matrix.target }}/release/sonora-tui --version
+
       - name: Package macOS Artifacts
         run: |
           VERSION="${{ steps.version.outputs.version }}"
@@ -294,7 +309,7 @@ jobs:
           if [[ -n "$DMG" && -f "$DMG" ]]; then
             cp "$DMG" "dist-macos/Sonora-v${VERSION}-macos-${{ matrix.arch }}.dmg"
           else
-            echo "Warning: DMG not found in expected folder"
+            echo "Error: DMG package not found" && exit 1
           fi
 
           # Package terminal bundle

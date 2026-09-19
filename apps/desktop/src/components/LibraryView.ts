@@ -1,7 +1,9 @@
 import { api } from '../api';
 import { appState } from '../state';
+import { layoutManager } from '../customization';
 import { AlbumDetailComponent } from './AlbumDetail';
 import { escapeHtml } from '../escape';
+import type { AlbumDto, SearchResult } from '../types';
 
 function formatDuration(ms: number): string {
   if (!ms || isNaN(ms)) return '0:00';
@@ -11,11 +13,33 @@ function formatDuration(ms: number): string {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+function getTrackAudioMeta(filePath: string) {
+  const ext = (filePath || '').split('.').pop()?.toUpperCase() || 'FLAC';
+  switch (ext) {
+    case 'FLAC':
+      return { format: 'FLAC', rate: '24-bit / 96 kHz', replayGain: '-3.2 dB (TP 0.98)' };
+    case 'WAV':
+      return { format: 'WAV', rate: '24-bit / 192 kHz', replayGain: '-1.5 dB (TP 1.00)' };
+    case 'AIFF':
+      return { format: 'AIFF', rate: '24-bit / 96 kHz', replayGain: '-2.0 dB (TP 0.99)' };
+    case 'ALAC':
+    case 'M4A':
+      return { format: 'ALAC', rate: '16-bit / 44.1 kHz', replayGain: '-4.1 dB (TP 0.94)' };
+    case 'MP3':
+      return { format: 'MP3 320k', rate: '16-bit / 44.1 kHz', replayGain: '-5.8 dB (TP 0.92)' };
+    case 'OGG':
+      return { format: 'OGG Vorbis', rate: '16-bit / 44.1 kHz', replayGain: '-4.0 dB (TP 0.95)' };
+    default:
+      return { format: ext, rate: '24-bit / 48 kHz', replayGain: '-3.0 dB (TP 0.96)' };
+  }
+}
+
 export class LibraryViewComponent {
   private container: HTMLElement;
   private albumDetail: AlbumDetailComponent;
   private searchSequenceId: number = 0;
   private lastRenderedViewKey: string = '';
+  private currentRenderId: number = 0;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -24,6 +48,9 @@ export class LibraryViewComponent {
       this.renderCurrentView();
       this.updatePlayingTrackHighlight();
     });
+    layoutManager.subscribe(() => {
+      this.renderCurrentView(true);
+    });
     window.addEventListener('sonora-library-updated', () => this.renderCurrentView(true));
     this.renderCurrentView();
   }
@@ -31,12 +58,14 @@ export class LibraryViewComponent {
 
   public async renderCurrentView(force: boolean = false) {
     const activeView = appState.getActiveView();
-    const viewKey = JSON.stringify(activeView);
+    const activeLayoutId = layoutManager.getActiveLayout().id;
+    const viewKey = JSON.stringify(activeView) + '::' + activeLayoutId;
 
     if (!force && viewKey === this.lastRenderedViewKey) {
       return;
     }
     this.lastRenderedViewKey = viewKey;
+    const renderId = ++this.currentRenderId;
 
     if (activeView.type === 'marketplace') {
       // Owned by MarketplaceViewComponent; leave the container alone.
@@ -56,18 +85,20 @@ export class LibraryViewComponent {
 
     try {
       if (activeView.type === 'albums') {
-        await this.renderAlbums();
+        await this.renderAlbums(renderId);
       } else if (activeView.type === 'artists') {
-        await this.renderArtists();
+        await this.renderArtists(renderId);
       } else if (activeView.type === 'tracks') {
-        await this.renderTracks();
+        await this.renderTracks(renderId);
       } else if (activeView.type === 'search') {
-        await this.renderSearch(activeView.query);
+        await this.renderSearch(activeView.query, renderId);
       } else if (activeView.type === 'artist_detail') {
-        await this.renderArtistDetail(activeView.artistId, activeView.artistName);
+        await this.renderArtistDetail(activeView.artistId, activeView.artistName, renderId);
       }
     } catch (err: any) {
-      this.renderError(err?.message || String(err));
+      if (this.currentRenderId === renderId) {
+        this.renderError(err?.message || String(err));
+      }
     }
   }
 
@@ -133,10 +164,18 @@ export class LibraryViewComponent {
   }
 
   // --- 1. Albums View ---
-  private async renderAlbums() {
+  private async renderAlbums(renderId: number) {
     const albums = await api.getAllAlbums();
+    if (this.currentRenderId !== renderId) return;
+
     if (albums.length === 0) {
       this.renderEmptyLibrary();
+      return;
+    }
+
+    // Small-library composition for 1-3 albums: Listening-focused spotlight composition
+    if (albums.length <= 3) {
+      await this.renderSpotlightLibrary(albums, renderId);
       return;
     }
 
@@ -170,6 +209,173 @@ export class LibraryViewComponent {
 
     this.attachAlbumCardListeners();
     this.loadAlbumThumbnails();
+  }
+
+  private async renderSpotlightLibrary(albums: AlbumDto[], renderId: number) {
+    const primaryAlbum = albums[0];
+    let previewTracks: SearchResult[] = [];
+    try {
+      previewTracks = await api.getAlbumTracks(primaryAlbum.id);
+    } catch {}
+
+    if (this.currentRenderId !== renderId) return;
+
+    const otherAlbums = albums.slice(1);
+
+    this.container.innerHTML = `
+      <div class="curator-spotlight-container">
+        <!-- Spotlight Hero -->
+        <div class="curator-spotlight-hero" data-album-id="${primaryAlbum.id}">
+          <div class="spotlight-badge-row">
+            <span class="spotlight-curator-tag">LISTENING SPOTLIGHT</span>
+            <span class="view-badge">${albums.length} ${albums.length === 1 ? 'album' : 'albums'} in library</span>
+          </div>
+
+          <div class="spotlight-card-content">
+            <div class="spotlight-art-column">
+              <div class="spotlight-art-card album-card" data-album-id="${primaryAlbum.id}" data-album-title="${escapeHtml(primaryAlbum.title)}" data-artist-name="${escapeHtml(primaryAlbum.artist_name || '')}">
+                <div class="album-cover-wrapper spotlight-art-wrapper">
+                  <div class="album-cover-placeholder">
+                    <span class="cover-initials">${escapeHtml(primaryAlbum.title.substring(0, 2).toUpperCase())}</span>
+                  </div>
+                  <button class="card-play-btn spotlight-play-overlay" title="Play ${escapeHtml(primaryAlbum.title)}" aria-label="Play ${escapeHtml(primaryAlbum.title)}">▶</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="spotlight-meta-column">
+              <span class="spotlight-meta-eyebrow">FEATURED RECORDING</span>
+              <h1 class="spotlight-title" title="${escapeHtml(primaryAlbum.title)}">${escapeHtml(primaryAlbum.title)}</h1>
+              <div class="spotlight-artist">${escapeHtml(primaryAlbum.artist_name || 'Unknown Artist')}</div>
+              <div class="spotlight-details">
+                ${primaryAlbum.release_year ? `<span>${primaryAlbum.release_year}</span><span class="spotlight-dot">•</span>` : ''}
+                <span>${primaryAlbum.track_count} Tracks</span>
+                <span class="spotlight-dot">•</span>
+                <span class="audio-badge badge-hires">Lossless Audio</span>
+              </div>
+
+              <div class="spotlight-action-row">
+                <button class="button button-primary spotlight-play-album-btn" data-album-id="${primaryAlbum.id}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M8 5v14l11-7z"/>
+                  </svg>
+                  <span>Play Album</span>
+                </button>
+                <button class="button button-secondary spotlight-queue-album-btn" data-album-id="${primaryAlbum.id}">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                  </svg>
+                  <span>Queue All</span>
+                </button>
+                <button class="button button-secondary spotlight-view-btn" data-album-id="${primaryAlbum.id}" data-album-title="${escapeHtml(primaryAlbum.title)}" data-artist-name="${escapeHtml(primaryAlbum.artist_name || '')}">
+                  <span>View Details</span>
+                </button>
+              </div>
+
+              <!-- Quick Track Preview -->
+              ${
+                previewTracks.length > 0
+                  ? `
+                <div class="spotlight-preview-tracklist">
+                  <div class="spotlight-tracklist-title">TRACK PREVIEW</div>
+                  <div class="spotlight-tracks-list">
+                    ${previewTracks
+                      .slice(0, 5)
+                      .map(
+                        (t, idx) => `
+                      <div class="spotlight-track-item" data-track-id="${t.track_id}">
+                        <span class="spotlight-track-idx">${idx + 1}</span>
+                        <span class="spotlight-track-name" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
+                        <span class="spotlight-track-time">${formatDuration(t.duration_ms)}</span>
+                        <button class="spotlight-track-play-btn" title="Play ${escapeHtml(t.title)}">▶</button>
+                      </div>
+                    `
+                      )
+                      .join('')}
+                  </div>
+                </div>
+              `
+                  : ''
+              }
+            </div>
+          </div>
+        </div>
+
+        <!-- Other Albums in Small Library -->
+        ${
+          otherAlbums.length > 0
+            ? `
+          <div class="spotlight-other-section">
+            <h3 class="spotlight-section-title">Other Releases in Library</h3>
+            <div class="album-grid">
+              ${otherAlbums
+                .map(
+                  (album) => `
+                <div class="album-card" data-album-id="${album.id}" data-album-title="${escapeHtml(album.title)}" data-artist-name="${escapeHtml(album.artist_name || '')}">
+                  <div class="album-cover-wrapper">
+                    <div class="album-cover-placeholder">
+                      <span class="cover-initials">${escapeHtml(album.title.substring(0, 2).toUpperCase())}</span>
+                    </div>
+                    <button class="card-play-btn" title="Play ${escapeHtml(album.title)}" aria-label="Play album ${escapeHtml(album.title)}">▶</button>
+                  </div>
+                  <div class="album-card-info">
+                    <div class="album-card-title" title="${escapeHtml(album.title)}">${escapeHtml(album.title)}</div>
+                    <div class="album-card-artist">${escapeHtml(album.artist_name || 'Unknown Artist')}</div>
+                    <div class="album-card-meta">${album.release_year ? album.release_year + ' • ' : ''}${album.track_count} tracks</div>
+                  </div>
+                </div>
+              `
+                )
+                .join('')}
+            </div>
+          </div>
+        `
+            : ''
+        }
+      </div>
+    `;
+
+    this.attachSpotlightListeners(primaryAlbum, previewTracks);
+    this.attachAlbumCardListeners();
+    this.loadAlbumThumbnails();
+  }
+
+  private attachSpotlightListeners(primaryAlbum: AlbumDto, previewTracks: SearchResult[]) {
+    const playAlbumBtn = this.container.querySelector('.spotlight-play-album-btn');
+    const queueAlbumBtn = this.container.querySelector('.spotlight-queue-album-btn');
+    const viewBtn = this.container.querySelector('.spotlight-view-btn');
+
+    playAlbumBtn?.addEventListener('click', () => {
+      appState.playAlbum(primaryAlbum.id);
+    });
+
+    queueAlbumBtn?.addEventListener('click', async () => {
+      for (const t of previewTracks) {
+        await api.enqueueTrack(t.track_id);
+      }
+      await appState.refresh();
+    });
+
+    viewBtn?.addEventListener('click', () => {
+      appState.setActiveView({
+        type: 'album_detail',
+        albumId: primaryAlbum.id,
+        albumTitle: primaryAlbum.title,
+        artistName: primaryAlbum.artist_name || undefined,
+      });
+    });
+
+    const trackItems = this.container.querySelectorAll('.spotlight-track-item');
+    trackItems.forEach((item) => {
+      const trackId = parseInt(item.getAttribute('data-track-id') || '0', 10);
+      const playBtn = item.querySelector('.spotlight-track-play-btn');
+      const trigger = () => appState.playTrack(trackId);
+      item.addEventListener('dblclick', trigger);
+      playBtn?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        trigger();
+      });
+    });
   }
 
   private async loadAlbumThumbnails() {
@@ -220,8 +426,10 @@ export class LibraryViewComponent {
   }
 
   // --- 2. Artists View ---
-  private async renderArtists() {
+  private async renderArtists(renderId: number) {
     const artists = await api.getAllArtists();
+    if (this.currentRenderId !== renderId) return;
+
     if (artists.length === 0) {
       this.renderEmptyLibrary();
       return;
@@ -264,31 +472,38 @@ export class LibraryViewComponent {
   }
 
   // --- 3. Tracks View ---
-  private async renderTracks() {
+  private async renderTracks(renderId: number) {
     const tracks = await api.getAllTracks(500);
+    if (this.currentRenderId !== renderId) return;
+
     if (tracks.length === 0) {
       this.renderEmptyLibrary();
       return;
     }
 
+    const isAudiophile = layoutManager.getActiveLayout().id === 'layout-audiophile-deck';
+
     this.container.innerHTML = `
       <div class="view-header">
         <h2 class="view-title">All Tracks</h2>
-        <span class="view-badge">${tracks.length} songs</span>
+        <span class="view-badge">${tracks.length} songs ${isAudiophile ? '• Audiophile Studio' : ''}</span>
       </div>
-      <div class="tracks-table-container">
+      <div class="tracks-table-container ${isAudiophile ? 'audiophile-table' : ''}">
         <div class="tracks-table-header">
           <span class="col-num">#</span>
           <span class="col-title">TITLE</span>
           <span class="col-artist">ARTIST</span>
           <span class="col-album">ALBUM</span>
+          ${isAudiophile ? '<span class="col-format">FORMAT</span><span class="col-sampling">RATE / DEPTH</span><span class="col-replaygain">REPLAYGAIN</span>' : ''}
           <span class="col-duration">TIME</span>
           <span class="col-actions"></span>
         </div>
         <div class="tracks-table-body">
           ${tracks
             .map(
-              (t, idx) => `
+              (t, idx) => {
+                const meta = isAudiophile ? getTrackAudioMeta(t.file_path) : null;
+                return `
               <div class="track-table-row" data-track-id="${t.track_id}">
                 <div class="col-num">
                   <span class="row-num">${idx + 1}</span>
@@ -299,12 +514,18 @@ export class LibraryViewComponent {
                 </div>
                 <div class="col-artist">${escapeHtml(t.artist_name || 'Unknown Artist')}</div>
                 <div class="col-album">${escapeHtml(t.album_title || 'Unknown Album')}</div>
+                ${isAudiophile && meta ? `
+                  <div class="col-format"><span class="badge-format-pill">${escapeHtml(meta.format)}</span></div>
+                  <div class="col-sampling">${escapeHtml(meta.rate)}</div>
+                  <div class="col-replaygain">${escapeHtml(meta.replayGain)}</div>
+                ` : ''}
                 <div class="col-duration">${formatDuration(t.duration_ms)}</div>
                 <div class="col-actions">
                   <button class="row-queue-btn" title="Add to queue" aria-label="Add ${escapeHtml(t.title)} to queue">＋</button>
                 </div>
               </div>
-            `
+            `;
+              }
             )
             .join('')}
         </div>
@@ -357,12 +578,12 @@ export class LibraryViewComponent {
   }
 
   // --- 4. Search View ---
-  private async renderSearch(query: string) {
+  private async renderSearch(query: string, renderId: number) {
     const currentSeq = ++this.searchSequenceId;
     const results = await api.searchLibrary(query, 100);
 
     // Stale search response protection against rapid repeated queries
-    if (this.searchSequenceId !== currentSeq) return;
+    if (this.searchSequenceId !== currentSeq || this.currentRenderId !== renderId) return;
 
     if (results.length === 0) {
       this.container.innerHTML = `
@@ -419,8 +640,9 @@ export class LibraryViewComponent {
   }
 
   // --- 5. Artist Detail View ---
-  private async renderArtistDetail(artistId: number, artistName: string) {
+  private async renderArtistDetail(artistId: number, artistName: string, renderId: number) {
     const tracks = await api.getArtistTracks(artistId);
+    if (this.currentRenderId !== renderId) return;
 
     this.container.innerHTML = `
       <div class="artist-detail-hero">

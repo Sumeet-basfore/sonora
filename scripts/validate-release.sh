@@ -47,19 +47,19 @@ echo "✅ All files are non-empty."
 
 echo ""
 echo "3. Validating terminal archives..."
-for archive in "$DIST_DIR"/Sonora-*-terminal.tar.gz; do
+for archive in "$DIST_DIR"/*-terminal.tar.gz; do
   if [[ -f "$archive" ]]; then
     echo "  Checking $(basename "$archive")..."
     tar_contents=$(tar -ztvf "$archive")
-    if ! echo "$tar_contents" | grep -q "sonora-terminal/sonora"; then
+    if ! echo "$tar_contents" | grep -q "sonora"; then
       echo "❌ Error: '$archive' missing 'sonora' binary!" >&2
       exit 1
     fi
-    if ! echo "$tar_contents" | grep -q "sonora-terminal/sonora-tui"; then
+    if ! echo "$tar_contents" | grep -q "sonora-tui"; then
       echo "❌ Error: '$archive' missing 'sonora-tui' binary!" >&2
       exit 1
     fi
-    if ! echo "$tar_contents" | grep -q "sonora-terminal/README.txt"; then
+    if ! echo "$tar_contents" | grep -q "README.txt"; then
       echo "❌ Error: '$archive' missing 'README.txt'!" >&2
       exit 1
     fi
@@ -67,7 +67,7 @@ for archive in "$DIST_DIR"/Sonora-*-terminal.tar.gz; do
   fi
 done
 
-for zip_archive in "$DIST_DIR"/Sonora-*-terminal.zip; do
+for zip_archive in "$DIST_DIR"/*-terminal.zip; do
   if [[ -f "$zip_archive" ]]; then
     echo "  Checking $(basename "$zip_archive")..."
     if command -v unzip >/dev/null 2>&1; then

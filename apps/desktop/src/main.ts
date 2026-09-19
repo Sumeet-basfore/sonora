@@ -5,6 +5,7 @@ import { HeaderComponent } from './components/Header';
 import { LibraryViewComponent } from './components/LibraryView';
 import { LyricsViewComponent } from './components/LyricsView';
 import { MarketplaceViewComponent } from './components/MarketplaceView';
+import { NowPlayingStageComponent } from './components/NowPlayingStage';
 import { PlaybackBarComponent } from './components/PlaybackBar';
 import { QueueDrawerComponent } from './components/QueueDrawer';
 import { ScanModalComponent } from './components/ScanModal';
@@ -43,6 +44,9 @@ function initializeApp() {
         <main class="app-main" id="main-container" tabindex="-1"></main>
       </div>
 
+      <!-- Right Now Playing & Context Stage -->
+      <aside class="now-playing-stage" id="now-playing-container"></aside>
+
       <!-- Slide-out Active Queue Drawer -->
       <aside class="queue-drawer" id="queue-container"></aside>
 
@@ -67,6 +71,7 @@ function initializeApp() {
   const sidebarContainer = document.querySelector('#sidebar-container') as HTMLElement;
   const headerContainer = document.querySelector('#header-container') as HTMLElement;
   const mainContainer = document.querySelector('#main-container') as HTMLElement;
+  const nowPlayingContainer = document.querySelector('#now-playing-container') as HTMLElement;
   const queueContainer = document.querySelector('#queue-container') as HTMLElement;
   const lyricsContainer = document.querySelector('#lyrics-container') as HTMLElement;
   const playbackContainer = document.querySelector('#playback-container') as HTMLElement;
@@ -78,6 +83,7 @@ function initializeApp() {
   const header = new HeaderComponent(headerContainer);
   new LibraryViewComponent(mainContainer);
   new MarketplaceViewComponent(mainContainer);
+  new NowPlayingStageComponent(nowPlayingContainer);
   new PlaybackBarComponent(playbackContainer);
   new QueueDrawerComponent(queueContainer);
   new LyricsViewComponent(lyricsContainer);
@@ -110,6 +116,7 @@ function initializeApp() {
     const regions = layoutManager.getRegions();
     sidebarContainer.style.display = regions.sidebar ? 'flex' : 'none';
     mainContainer.style.display = regions.library ? 'block' : 'none';
+    nowPlayingContainer.style.display = regions.nowPlaying ? 'flex' : 'none';
     queueContainer.style.display = regions.queue || appState.isQueueVisible() ? 'flex' : 'none';
     playbackContainer.style.display = regions.playbackBar ? 'flex' : 'none';
     lyricsContainer.style.display = regions.lyrics ? 'flex' : 'none';
@@ -149,6 +156,53 @@ function initializeApp() {
   window.addEventListener('sonora-library-updated', () => {
     sidebar.refresh();
   });
+
+  // Support direct URL query parameters for deep linking, presets, and inspection
+  const searchParams = new URLSearchParams(window.location.search);
+  const layoutParam = searchParams.get('layout');
+  const viewParam = searchParams.get('view');
+  const playParam = searchParams.get('play') === '1';
+  const queueParam = searchParams.get('open_queue') === '1';
+  const lyricsParam = searchParams.get('open_lyrics') === '1';
+  const settingsParam = searchParams.get('open_settings') === '1';
+
+  if (layoutParam) {
+    if (layoutParam === 'modern_curator' || layoutParam === 'layout-default-studio') {
+      layoutManager.setLayout('layout-default-studio');
+    } else if (layoutParam === 'audiophile_studio' || layoutParam === 'layout-audiophile-deck') {
+      layoutManager.setLayout('layout-audiophile-deck');
+    } else if (layoutParam === 'atmospheric_theater' || layoutParam === 'layout-lyrics-stage') {
+      layoutManager.setLayout('layout-lyrics-stage');
+    } else if (layoutParam === 'minimal' || layoutParam === 'layout-minimal-player') {
+      layoutManager.setLayout('layout-minimal-player');
+    } else {
+      layoutManager.setLayout(layoutParam);
+    }
+  }
+  if (viewParam === 'albums') {
+    appState.setActiveView({ type: 'albums' });
+  } else if (viewParam === 'tracks') {
+    appState.setActiveView({ type: 'tracks' });
+  } else if (viewParam === 'album_detail') {
+    appState.setActiveView({
+      type: 'album_detail',
+      albumId: 1,
+      albumTitle: 'Random Access Memories',
+      artistName: 'Daft Punk',
+    });
+  }
+  if (playParam) {
+    void appState.playTrack(1);
+  }
+  if (queueParam) {
+    appState.toggleQueue(true);
+  }
+  if (lyricsParam) {
+    layoutManager.setRegionVisible('lyrics', true);
+  }
+  if (settingsParam) {
+    settingsModal.open();
+  }
 }
 
 if (document.readyState === 'loading') {

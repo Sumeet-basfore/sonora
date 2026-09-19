@@ -374,6 +374,9 @@ async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>): Promi
           { start_time_ms: 5000, end_time_ms: 10000, text: 'Custom Sidecar Lyric Line 2', syllables: [] },
         ],
       } as T;
+    case 'get_track_artwork':
+    case 'get_album_artwork':
+      return null as T;
     default:
       return [] as unknown as T;
   }

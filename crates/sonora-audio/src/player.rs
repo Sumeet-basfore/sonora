@@ -2,7 +2,7 @@ use crate::decoder::AudioDecoder;
 use crate::engine::{AudioEngine, DEFAULT_RING_BUFFER_CAPACITY};
 use rtrb::RingBuffer;
 use sonora_common::{PlaybackState, Result, SonoraError};
-use sonora_dsp::LinearResampler;
+use sonora_dsp::{PlaybackMode, ReplayGainConfig, SincResampler};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{channel, Receiver, Sender};
@@ -12,10 +12,14 @@ use std::time::Duration;
 #[derive(Debug)]
 pub enum PlayerCommand {
     Play(PathBuf),
+    EnqueueNext(PathBuf),
     Pause,
     Resume,
     Seek(u64), // position in ms
     SetVolume(f32),
+    SetPlaybackMode(PlaybackMode),
+    SetReplayGainConfig(ReplayGainConfig),
+    SetEqBand(usize, f32),
     Stop,
 }
 
@@ -23,21 +27,25 @@ pub enum PlayerCommand {
 pub struct PlayerStateSnapshot {
     pub state: PlaybackState,
     pub current_path: Option<PathBuf>,
+    pub next_path: Option<PathBuf>,
     pub duration_ms: u64,
     pub position_ms: u64,
     pub volume: f32,
+    pub mode: PlaybackMode,
+    pub is_bit_perfect: bool,
     pub is_finished: bool,
 }
 
 struct PlayerSharedData {
     state: PlaybackState,
     current_path: Option<PathBuf>,
+    next_path: Option<PathBuf>,
     duration_ms: u64,
     is_finished: bool,
 }
 
-/// High-level audio player coordinating decoding outside the real-time audio thread
-/// and feeding the lock-free output engine.
+/// High-level audio player coordinating dual-decoder prebuffering outside the real-time audio thread
+/// and feeding the lock-free output engine with seamless gapless transitions.
 pub struct AudioPlayer {
     engine: Arc<AudioEngine>,
     cmd_tx: Sender<PlayerCommand>,
@@ -65,6 +73,7 @@ impl AudioPlayer {
         let shared = Arc::new(Mutex::new(PlayerSharedData {
             state: PlaybackState::Stopped,
             current_path: None,
+            next_path: None,
             duration_ms: 0,
             is_finished: false,
         }));
@@ -103,13 +112,30 @@ impl AudioPlayer {
             .map_err(|e| SonoraError::Audio(format!("Failed to send Play command: {e}")))
     }
 
+    pub fn enqueue_next<P: AsRef<Path>>(&self, path: P) -> Result<()> {
+        let path_buf = path.as_ref().to_path_buf();
+        self.cmd_tx
+            .send(PlayerCommand::EnqueueNext(path_buf))
+            .map_err(|e| SonoraError::Audio(format!("Failed to send EnqueueNext command: {e}")))
+    }
+
     pub fn pause(&self) -> Result<()> {
+        self.engine.pause();
+        {
+            let mut s = self.shared.lock().unwrap();
+            s.state = PlaybackState::Paused;
+        }
         self.cmd_tx
             .send(PlayerCommand::Pause)
             .map_err(|e| SonoraError::Audio(format!("Failed to send Pause command: {e}")))
     }
 
     pub fn resume(&self) -> Result<()> {
+        self.engine.resume();
+        {
+            let mut s = self.shared.lock().unwrap();
+            s.state = PlaybackState::Playing;
+        }
         self.cmd_tx
             .send(PlayerCommand::Resume)
             .map_err(|e| SonoraError::Audio(format!("Failed to send Resume command: {e}")))
@@ -128,7 +154,36 @@ impl AudioPlayer {
             .map_err(|e| SonoraError::Audio(format!("Failed to send SetVolume command: {e}")))
     }
 
+    pub fn set_playback_mode(&self, mode: PlaybackMode) -> Result<()> {
+        self.engine.set_playback_mode(mode);
+        self.cmd_tx
+            .send(PlayerCommand::SetPlaybackMode(mode))
+            .map_err(|e| SonoraError::Audio(format!("Failed to send SetPlaybackMode command: {e}")))
+    }
+
+    pub fn set_replaygain_config(&self, config: ReplayGainConfig) -> Result<()> {
+        self.engine.set_replaygain_config(config);
+        self.cmd_tx
+            .send(PlayerCommand::SetReplayGainConfig(config))
+            .map_err(|e| {
+                SonoraError::Audio(format!("Failed to send SetReplayGainConfig command: {e}"))
+            })
+    }
+
+    pub fn set_eq_band(&self, band_idx: usize, gain_db: f32) -> Result<()> {
+        self.engine.set_eq_band(band_idx, gain_db);
+        self.cmd_tx
+            .send(PlayerCommand::SetEqBand(band_idx, gain_db))
+            .map_err(|e| SonoraError::Audio(format!("Failed to send SetEqBand command: {e}")))
+    }
+
     pub fn stop(&self) -> Result<()> {
+        self.engine.pause();
+        self.engine.flush();
+        {
+            let mut s = self.shared.lock().unwrap();
+            s.state = PlaybackState::Stopped;
+        }
         self.cmd_tx
             .send(PlayerCommand::Stop)
             .map_err(|e| SonoraError::Audio(format!("Failed to send Stop command: {e}")))
@@ -142,18 +197,27 @@ impl AudioPlayer {
         self.engine.position_ms()
     }
 
+    pub fn playback_mode(&self) -> PlaybackMode {
+        self.engine.playback_mode()
+    }
+
     pub fn visualizer_data(&self) -> Vec<f32> {
         self.engine.visualizer_data()
     }
 
     pub fn snapshot(&self) -> PlayerStateSnapshot {
         let shared = self.shared.lock().unwrap();
+        let mode = self.engine.playback_mode();
+        let is_bit_perfect = mode == PlaybackMode::BitPerfect;
         PlayerStateSnapshot {
             state: shared.state,
             current_path: shared.current_path.clone(),
+            next_path: shared.next_path.clone(),
             duration_ms: shared.duration_ms,
             position_ms: self.engine.position_ms(),
             volume: self.engine.volume(),
+            mode,
+            is_bit_perfect,
             is_finished: shared.is_finished,
         }
     }
@@ -174,10 +238,13 @@ impl AudioPlayer {
         shutdown: Arc<AtomicBool>,
     ) {
         let mut current_decoder: Option<AudioDecoder> = None;
+        let mut next_decoder: Option<AudioDecoder> = None;
+        let mut next_path: Option<PathBuf> = None;
+
         let mut resampler =
-            LinearResampler::new(engine.sample_rate() as f32, engine.sample_rate() as f32);
-        let mut resample_out = vec![0.0f32; 8192];
-        let mut pending_buffer: Vec<f32> = Vec::with_capacity(16384);
+            SincResampler::new(engine.sample_rate() as f32, engine.sample_rate() as f32, 2);
+        let mut resample_out = vec![0.0f32; 16384];
+        let mut pending_buffer: Vec<f32> = Vec::with_capacity(32768);
         let mut pending_offset: usize = 0;
         let mut eof_reached = false;
         let mut consecutive_errors: usize = 0;
@@ -206,6 +273,9 @@ impl AudioPlayer {
                                 .map(|f| (f * 1000) / decoder.info().sample_rate as u64)
                                 .unwrap_or(0);
 
+                            // Apply track ReplayGain metadata to engine
+                            engine.set_track_metadata(decoder.replaygain());
+
                             engine.flush();
                             engine.set_frames_played(0);
                             engine.set_playing(true);
@@ -213,11 +283,14 @@ impl AudioPlayer {
                             consecutive_errors = 0;
                             pending_buffer.clear();
                             pending_offset = 0;
+                            next_decoder = None;
+                            next_path = None;
 
                             {
                                 let mut s = shared.lock().unwrap();
                                 s.state = PlaybackState::Playing;
                                 s.current_path = Some(path);
+                                s.next_path = None;
                                 s.duration_ms = duration_ms;
                                 s.is_finished = false;
                             }
@@ -229,6 +302,21 @@ impl AudioPlayer {
                             let mut s = shared.lock().unwrap();
                             s.state = PlaybackState::Stopped;
                             s.is_finished = true;
+                        }
+                    },
+                    PlayerCommand::EnqueueNext(path) => match AudioDecoder::open(&path) {
+                        Ok(decoder) => {
+                            next_decoder = Some(decoder);
+                            next_path = Some(path.clone());
+                            let mut s = shared.lock().unwrap();
+                            s.next_path = Some(path);
+                        }
+                        Err(e) => {
+                            tracing::warn!("Failed to pre-open next track for gapless queue: {e}");
+                            next_decoder = None;
+                            next_path = None;
+                            let mut s = shared.lock().unwrap();
+                            s.next_path = None;
                         }
                     },
                     PlayerCommand::Pause => {
@@ -273,14 +361,26 @@ impl AudioPlayer {
                     PlayerCommand::SetVolume(vol) => {
                         engine.set_volume(vol);
                     }
+                    PlayerCommand::SetPlaybackMode(mode) => {
+                        engine.set_playback_mode(mode);
+                    }
+                    PlayerCommand::SetReplayGainConfig(config) => {
+                        engine.set_replaygain_config(config);
+                    }
+                    PlayerCommand::SetEqBand(band_idx, gain_db) => {
+                        engine.set_eq_band(band_idx, gain_db);
+                    }
                     PlayerCommand::Stop => {
                         engine.pause();
                         engine.flush();
                         current_decoder = None;
+                        next_decoder = None;
+                        next_path = None;
                         pending_buffer.clear();
                         pending_offset = 0;
                         let mut s = shared.lock().unwrap();
                         s.state = PlaybackState::Stopped;
+                        s.next_path = None;
                     }
                 }
             }
@@ -318,8 +418,8 @@ impl AudioPlayer {
                                         * (engine.sample_rate() as f32 / in_rate as f32))
                                         .ceil()
                                         as usize
-                                        + 512)
-                                        .max(1024);
+                                        + 1024)
+                                        .max(2048);
                                     if resample_out.len() < req_len {
                                         resample_out.resize(req_len, 0.0);
                                     }
@@ -348,8 +448,51 @@ impl AudioPlayer {
                                     }
                                 }
                                 Ok(None) => {
-                                    eof_reached = true;
-                                    consecutive_errors = 0;
+                                    // Flush remaining samples in resampler FIFO
+                                    let flush_frames = resampler.flush_remaining(&mut resample_out);
+                                    if flush_frames > 0 {
+                                        let flush_samples = flush_frames * 2;
+                                        pending_buffer.clear();
+                                        pending_buffer
+                                            .extend_from_slice(&resample_out[..flush_samples]);
+                                        pending_offset = 0;
+                                    }
+
+                                    // Check if we have a gapless next track prepared
+                                    if let Some(next_dec) = next_decoder.take() {
+                                        tracing::info!("Gapless transition: Promoting pre-buffered next track to active decoder");
+                                        let file_rate = next_dec.info().sample_rate as f32;
+                                        let engine_rate = engine.sample_rate() as f32;
+                                        resampler.set_rates(file_rate, engine_rate);
+                                        resampler.reset();
+
+                                        let duration_ms = next_dec
+                                            .info()
+                                            .duration_frames
+                                            .map(|f| {
+                                                (f * 1000) / next_dec.info().sample_rate as u64
+                                            })
+                                            .unwrap_or(0);
+
+                                        engine.set_track_metadata(next_dec.replaygain());
+                                        engine.set_frames_played(0);
+
+                                        let promoted_path = next_path.take();
+                                        {
+                                            let mut s = shared.lock().unwrap();
+                                            s.current_path = promoted_path;
+                                            s.next_path = None;
+                                            s.duration_ms = duration_ms;
+                                            s.is_finished = false;
+                                        }
+
+                                        current_decoder = Some(next_dec);
+                                        eof_reached = false;
+                                        consecutive_errors = 0;
+                                    } else {
+                                        eof_reached = true;
+                                        consecutive_errors = 0;
+                                    }
                                 }
                                 Err(e) => {
                                     consecutive_errors += 1;

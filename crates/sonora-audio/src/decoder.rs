@@ -1,4 +1,6 @@
+use lofty::file::TaggedFileExt;
 use sonora_common::{Result, SonoraError};
+use sonora_dsp::ReplayGainMetadata;
 use std::fs::File;
 use std::path::{Path, PathBuf};
 use symphonia::core::audio::Channels;
@@ -17,6 +19,61 @@ pub struct StreamInfo {
     pub sample_rate: u32,
     pub channels: u32,
     pub duration_frames: Option<u64>,
+    pub replay_gain: ReplayGainMetadata,
+    pub encoder_delay: u32,
+    pub end_padding: u32,
+}
+
+fn parse_db_str(s: &str) -> Option<f32> {
+    let clean = s
+        .trim()
+        .trim_end_matches("dB")
+        .trim_end_matches("db")
+        .trim();
+    clean.parse::<f32>().ok()
+}
+
+fn extract_replaygain_and_gapless(path: &Path) -> (ReplayGainMetadata, u32, u32) {
+    let mut meta = ReplayGainMetadata::default();
+    let mut encoder_delay = 0u32;
+    let mut end_padding = 0u32;
+
+    if let Ok(tagged_file) = lofty::read_from_path(path) {
+        if let Some(tag) = tagged_file
+            .primary_tag()
+            .or_else(|| tagged_file.first_tag())
+        {
+            for item in tag.items() {
+                let key_str = format!("{:?}", item.key()).to_uppercase();
+                let val_str = item.value().text().unwrap_or("");
+                if key_str.contains("REPLAYGAIN_TRACK_GAIN") || key_str.contains("R128_TRACK_GAIN")
+                {
+                    meta.track_gain_db = parse_db_str(val_str);
+                } else if key_str.contains("REPLAYGAIN_TRACK_PEAK") {
+                    meta.track_peak = val_str.trim().parse::<f32>().ok();
+                } else if key_str.contains("REPLAYGAIN_ALBUM_GAIN")
+                    || key_str.contains("R128_ALBUM_GAIN")
+                {
+                    meta.album_gain_db = parse_db_str(val_str);
+                } else if key_str.contains("REPLAYGAIN_ALBUM_PEAK") {
+                    meta.album_peak = val_str.trim().parse::<f32>().ok();
+                } else if key_str.contains("ITUNSMPB") {
+                    // Apple iTunSMPB: 00000000 <delay_hex> <padding_hex> <total_samples_hex> ...
+                    let parts: Vec<&str> = val_str.split_whitespace().collect();
+                    if parts.len() >= 4 {
+                        if let Ok(d) = u32::from_str_radix(parts[1], 16) {
+                            encoder_delay = d;
+                        }
+                        if let Ok(p) = u32::from_str_radix(parts[2], 16) {
+                            end_padding = p;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    (meta, encoder_delay, end_padding)
 }
 
 /// Symphonia-backed audio decoder for file playback.
@@ -29,6 +86,7 @@ pub struct AudioDecoder {
     stereo_sample_buf: Vec<f32>,
     info: StreamInfo,
     eof_reached: bool,
+    samples_skipped: u32,
 }
 
 struct OpenedAudioStream {
@@ -53,6 +111,7 @@ impl AudioDecoder {
             stereo_sample_buf: Vec::new(),
             info: opened.info,
             eof_reached: false,
+            samples_skipped: 0,
         })
     }
 
@@ -98,6 +157,8 @@ impl AudioDecoder {
             .unwrap_or(2);
         let duration_frames = track.num_frames;
 
+        let (replay_gain, encoder_delay, end_padding) = extract_replaygain_and_gapless(path);
+
         let decoder = symphonia::default::get_codecs()
             .make_audio_decoder(audio_params, &AudioDecoderOptions::default())
             .map_err(|e| SonoraError::Audio(format!("Failed to initialize decoder: {e}")))?;
@@ -106,6 +167,9 @@ impl AudioDecoder {
             sample_rate,
             channels,
             duration_frames,
+            replay_gain,
+            encoder_delay,
+            end_padding,
         };
 
         Ok(OpenedAudioStream {
@@ -118,6 +182,10 @@ impl AudioDecoder {
 
     pub fn info(&self) -> &StreamInfo {
         &self.info
+    }
+
+    pub fn replaygain(&self) -> &ReplayGainMetadata {
+        &self.info.replay_gain
     }
 
     /// Seek to a specific timestamp in milliseconds.
@@ -241,13 +309,27 @@ impl AudioDecoder {
                         }
                     }
 
+                    if self.samples_skipped < self.info.encoder_delay {
+                        let needed_to_skip =
+                            (self.info.encoder_delay - self.samples_skipped) as usize;
+                        let available_frames = self.stereo_sample_buf.len() / 2;
+                        if available_frames <= needed_to_skip {
+                            self.samples_skipped += available_frames as u32;
+                            continue;
+                        } else {
+                            let skip_samples = needed_to_skip * 2;
+                            self.samples_skipped += needed_to_skip as u32;
+                            self.stereo_sample_buf.drain(0..skip_samples);
+                        }
+                    }
+
                     return Ok(Some(&self.stereo_sample_buf));
                 }
                 Err(SymphoniaError::DecodeError(msg)) => {
-                    tracing::warn!("Recoverable decode error: {msg}");
+                    tracing::warn!("Recoverable packet decode error: {msg}");
                     continue;
                 }
-                Err(e) => return Err(SonoraError::Audio(format!("Decoder fatal error: {e}"))),
+                Err(e) => return Err(SonoraError::Audio(format!("Decoder error: {e}"))),
             }
         }
     }

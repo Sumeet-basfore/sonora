@@ -40,6 +40,27 @@ impl AudioOutput {
         })
     }
 
+    /// Initialize audio output using a specific device name or fallback to default.
+    pub fn from_device_name(name: &str) -> Result<Self> {
+        let host = cpal::default_host();
+        if let Ok(devices) = host.output_devices() {
+            for dev in devices {
+                if let Ok(desc) = dev.description() {
+                    if desc.name() == name {
+                        if let Ok(config) = dev.default_output_config() {
+                            return Ok(Self::Cpal {
+                                _host: host,
+                                device: dev,
+                                config,
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        Self::default_device()
+    }
+
     /// Explicitly create a virtual clock driver (for tests and headless CI).
     pub fn virtual_output(sample_rate: u32, channels: u16) -> Self {
         Self::Virtual {

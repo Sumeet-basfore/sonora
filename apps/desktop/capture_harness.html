@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sonora Capture Harness</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module">
+      import './src/main.ts';
+      import { appState } from './src/state.ts';
+      import { layoutManager } from './src/customization/index.ts';
+
+      async function initHarness() {
+        const params = new URLSearchParams(window.location.search);
+        const layout = params.get('layout');
+        const view = params.get('view');
+        const openQueue = params.get('open_queue') === '1';
+        const openLyrics = params.get('open_lyrics') === '1';
+        const openSettings = params.get('open_settings') === '1';
+        const play = params.get('play') === '1';
+
+        await new Promise(r => setTimeout(r, 400));
+
+        if (layout) {
+          layoutManager.setLayout(layout);
+        }
+
+        if (view === 'albums') {
+          appState.setActiveView({ type: 'albums' });
+        } else if (view === 'tracks') {
+          appState.setActiveView({ type: 'tracks' });
+        } else if (view === 'album_detail') {
+          appState.setActiveView({
+            type: 'album_detail',
+            albumId: 1,
+            albumTitle: 'Random Access Memories',
+            artistName: 'Daft Punk',
+          });
+        }
+
+        if (play) {
+          await appState.playTrack(1);
+        }
+
+        if (openQueue) {
+          appState.toggleQueue(true);
+        }
+
+        if (openLyrics) {
+          layoutManager.setRegionVisible('lyrics', true);
+        }
+
+        if (openSettings) {
+          window.dispatchEvent(new CustomEvent('sonora-open-settings'));
+        }
+
+        await new Promise(r => setTimeout(r, 800));
+        document.body.setAttribute('data-capture-ready', 'true');
+      }
+
+      if (document.readyState === 'loading') {
+        window.addEventListener('DOMContentLoaded', initHarness);
+      } else {
+        initHarness();
+      }
+    </script>
+  </body>
+</html>

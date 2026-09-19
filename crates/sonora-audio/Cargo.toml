@@ -8,7 +8,9 @@ authors.workspace = true
 [dependencies]
 sonora-common.workspace = true
 sonora-dsp.workspace = true
+serde.workspace = true
 cpal.workspace = true
 symphonia.workspace = true
+lofty.workspace = true
 rtrb.workspace = true
 tracing.workspace = true

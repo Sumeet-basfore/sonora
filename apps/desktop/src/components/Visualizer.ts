@@ -51,6 +51,11 @@ export class VisualizerComponent {
             <span class="visualizer-meta">48 Bands • FFT Spectrum</span>
           </div>
           <div class="visualizer-actions">
+            <button class="icon-button dock-vis-btn" title="Toggle Docked / Floating" aria-label="Toggle Docked Visualizer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+            </button>
             <button class="icon-button close-vis" title="Close visualizer" aria-label="Close visualizer">✕</button>
           </div>
         </div>
@@ -69,6 +74,12 @@ export class VisualizerComponent {
     const closeBtn = this.container.querySelector('.close-vis') as HTMLButtonElement;
     closeBtn.addEventListener('click', () => {
       appState.toggleVisualizer(false);
+    });
+
+    const dockBtn = this.container.querySelector('.dock-vis-btn') as HTMLButtonElement;
+    dockBtn?.addEventListener('click', () => {
+      const nextMode = this.config.displayMode === 'docked' ? 'floating' : 'docked';
+      visualizerConfigManager.updateConfig({ displayMode: nextMode });
     });
 
     // Subscribe to visualizer configuration changes
@@ -91,6 +102,15 @@ export class VisualizerComponent {
     const disabledOverlay = this.container.querySelector('.visualizer-disabled-overlay') as HTMLElement;
     const titleEl = this.container.querySelector('.visualizer-title') as HTMLElement;
     const metaEl = this.container.querySelector('.visualizer-meta') as HTMLElement;
+    const dockBtn = this.container.querySelector('.dock-vis-btn') as HTMLButtonElement;
+
+    if (this.config.displayMode === 'docked') {
+      this.container.classList.add('docked-strip');
+      if (dockBtn) dockBtn.title = 'Switch to Floating Visualizer';
+    } else {
+      this.container.classList.remove('docked-strip');
+      if (dockBtn) dockBtn.title = 'Dock Visualizer to Bottom Transport';
+    }
 
     if (wrapper) {
       wrapper.style.height = `${this.config.height}px`;

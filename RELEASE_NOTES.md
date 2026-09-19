@@ -34,7 +34,7 @@ Pre-built binaries are available for direct download without needing Rust or Nod
 | **Desktop (macOS)** | `Sonora-v0.1.0-macos-aarch64.dmg` / `Sonora-v0.1.0-macos-x86_64.dmg` | macOS Apple Silicon / Intel disk images |
 | **Terminal (Linux)** | `Sonora-v0.1.0-linux-x86_64-terminal.tar.gz` | Includes `sonora` CLI + `sonora-tui` |
 | **Terminal (Windows)** | `Sonora-v0.1.0-windows-x86_64-terminal.zip` | Includes `sonora.exe` + `sonora-tui.exe` |
-| **Terminal (macOS)** | `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz` | Includes `sonora` + `sonora-tui` for macOS |
+| **Terminal (macOS)** | `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz` / `Sonora-v0.1.0-macos-x86_64-terminal.tar.gz` | Includes `sonora` + `sonora-tui` for macOS |
 | **Verification** | `checksums.txt` | SHA-256 integrity checksums for all files |
 
 Download link: **[github.com/Sumeet-basfore/sonora/releases/tag/v0.1.0](https://github.com/Sumeet-basfore/sonora/releases/tag/v0.1.0)**
@@ -164,7 +164,6 @@ sudo dpkg -i Sonora-v0.1.0-linux-x86_64.deb
 ### Terminal Tools
 ```sh
 tar -xzf Sonora-v0.1.0-linux-x86_64-terminal.tar.gz
-cd sonora-terminal
 ./sonora-tui
 ```
 

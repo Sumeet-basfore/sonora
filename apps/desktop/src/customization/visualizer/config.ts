@@ -6,6 +6,7 @@
 
 export type VisualizerStyleId = 'bars' | 'wave' | 'mirror' | 'led';
 export type VisualizerColorSource = 'accent' | 'gradient' | 'monochrome' | 'artwork';
+export type VisualizerDisplayMode = 'floating' | 'docked';
 
 export interface VisualizerConfig {
   style: VisualizerStyleId;
@@ -14,6 +15,7 @@ export interface VisualizerConfig {
   height: number;      // 60 to 320 px
   fps: number;         // 30, 60, or 120
   colorSource: VisualizerColorSource;
+  displayMode: VisualizerDisplayMode;
   enabled: boolean;
 }
 
@@ -24,6 +26,7 @@ export const DEFAULT_VISUALIZER_CONFIG: VisualizerConfig = {
   height: 120,
   fps: 60,
   colorSource: 'accent',
+  displayMode: 'floating',
   enabled: true,
 };
 

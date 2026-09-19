@@ -1,9 +1,11 @@
 use crate::output::{AudioOutput, OutputStreamHandle};
 use rtrb::Consumer;
 use sonora_common::Result;
-use sonora_dsp::{Gain, ParametricEqualizer};
+use sonora_dsp::{
+    DspPipeline, PlaybackMode, ReplayGainConfig, ReplayGainMetadata, SpectrumAnalyzer,
+};
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, Ordering};
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub const DEFAULT_RING_BUFFER_CAPACITY: usize = 32768; // ~340ms of stereo audio at 48kHz
 pub const VISUALIZER_SAMPLES: usize = sonora_dsp::DEFAULT_FFT_SIZE; // 1024 samples
@@ -46,17 +48,18 @@ impl VisualizerTap {
     }
 }
 
-/// Real-time audio engine coordinating the output stream and lock-free ring buffer.
-/// Strictly zero-allocation and lock-free on the audio render thread.
+/// Real-time audio engine coordinating the output stream, DSP pipeline, and lock-free ring buffer.
 pub struct AudioEngine {
     output: AudioOutput,
     stream: Option<OutputStreamHandle>,
     is_playing: Arc<AtomicBool>,
     volume_bits: Arc<AtomicU32>,
+    playback_mode_bits: Arc<AtomicU32>,
     frames_played: Arc<AtomicU64>,
     flush_epoch: Arc<AtomicU32>,
     visualizer_tap: Arc<VisualizerTap>,
-    spectrum_analyzer: std::sync::Mutex<sonora_dsp::SpectrumAnalyzer>,
+    spectrum_analyzer: Mutex<SpectrumAnalyzer>,
+    dsp_pipeline: Arc<Mutex<DspPipeline>>,
     sample_rate: u32,
     channels: u16,
 }
@@ -66,21 +69,24 @@ impl AudioEngine {
         let output = AudioOutput::default_device()?;
         let sample_rate = output.sample_rate();
         let channels = output.channels();
-        let analyzer = sonora_dsp::SpectrumAnalyzer::new(
+        let analyzer = SpectrumAnalyzer::new(
             VISUALIZER_SAMPLES,
             sonora_dsp::DEFAULT_SPECTRUM_BANDS,
             sample_rate as f32,
         );
+        let pipeline = DspPipeline::new(sample_rate as f32);
 
         Ok(Self {
             output,
             stream: None,
             is_playing: Arc::new(AtomicBool::new(false)),
             volume_bits: Arc::new(AtomicU32::new(1.0f32.to_bits())),
+            playback_mode_bits: Arc::new(AtomicU32::new(PlaybackMode::DefaultShared as u32)),
             frames_played: Arc::new(AtomicU64::new(0)),
             flush_epoch: Arc::new(AtomicU32::new(0)),
             visualizer_tap: Arc::new(VisualizerTap::default()),
-            spectrum_analyzer: std::sync::Mutex::new(analyzer),
+            spectrum_analyzer: Mutex::new(analyzer),
+            dsp_pipeline: Arc::new(Mutex::new(pipeline)),
             sample_rate,
             channels,
         })
@@ -88,21 +94,24 @@ impl AudioEngine {
 
     pub fn virtual_engine(sample_rate: u32, channels: u16) -> Self {
         let output = AudioOutput::virtual_output(sample_rate, channels);
-        let analyzer = sonora_dsp::SpectrumAnalyzer::new(
+        let analyzer = SpectrumAnalyzer::new(
             VISUALIZER_SAMPLES,
             sonora_dsp::DEFAULT_SPECTRUM_BANDS,
             sample_rate as f32,
         );
+        let pipeline = DspPipeline::new(sample_rate as f32);
 
         Self {
             output,
             stream: None,
             is_playing: Arc::new(AtomicBool::new(false)),
             volume_bits: Arc::new(AtomicU32::new(1.0f32.to_bits())),
+            playback_mode_bits: Arc::new(AtomicU32::new(PlaybackMode::DefaultShared as u32)),
             frames_played: Arc::new(AtomicU64::new(0)),
             flush_epoch: Arc::new(AtomicU32::new(0)),
             visualizer_tap: Arc::new(VisualizerTap::default()),
-            spectrum_analyzer: std::sync::Mutex::new(analyzer),
+            spectrum_analyzer: Mutex::new(analyzer),
+            dsp_pipeline: Arc::new(Mutex::new(pipeline)),
             sample_rate,
             channels,
         }
@@ -131,6 +140,49 @@ impl AudioEngine {
     pub fn set_volume(&self, volume: f32) {
         let clamped = volume.clamp(0.0, 2.0);
         self.volume_bits.store(clamped.to_bits(), Ordering::Relaxed);
+        if let Ok(mut pipe) = self.dsp_pipeline.lock() {
+            pipe.set_volume(clamped);
+        }
+    }
+
+    pub fn playback_mode(&self) -> PlaybackMode {
+        match self.playback_mode_bits.load(Ordering::Relaxed) {
+            1 => PlaybackMode::HighQuality,
+            2 => PlaybackMode::BitPerfect,
+            3 => PlaybackMode::ExclusiveDsp,
+            _ => PlaybackMode::DefaultShared,
+        }
+    }
+
+    pub fn set_playback_mode(&self, mode: PlaybackMode) {
+        let val = match mode {
+            PlaybackMode::DefaultShared => 0,
+            PlaybackMode::HighQuality => 1,
+            PlaybackMode::BitPerfect => 2,
+            PlaybackMode::ExclusiveDsp => 3,
+        };
+        self.playback_mode_bits.store(val, Ordering::Relaxed);
+        if let Ok(mut pipe) = self.dsp_pipeline.lock() {
+            pipe.set_mode(mode);
+        }
+    }
+
+    pub fn set_replaygain_config(&self, config: ReplayGainConfig) {
+        if let Ok(mut pipe) = self.dsp_pipeline.lock() {
+            pipe.replay_gain_mut().set_config(config);
+        }
+    }
+
+    pub fn set_track_metadata(&self, meta: &ReplayGainMetadata) {
+        if let Ok(mut pipe) = self.dsp_pipeline.lock() {
+            pipe.set_track_metadata(meta);
+        }
+    }
+
+    pub fn set_eq_band(&self, band_idx: usize, gain_db: f32) {
+        if let Ok(mut pipe) = self.dsp_pipeline.lock() {
+            pipe.set_eq_band(band_idx, gain_db);
+        }
     }
 
     pub fn frames_played(&self) -> u64 {
@@ -171,18 +223,17 @@ impl AudioEngine {
 
     /// Initialize the output stream connected to the consumer ring buffer.
     pub fn start(&mut self, mut consumer: Consumer<f32>) -> Result<()> {
-        let mut eq_left = ParametricEqualizer::new(self.sample_rate as f32);
-        let mut eq_right = ParametricEqualizer::new(self.sample_rate as f32);
-        let mut gain = Gain::new(self.volume());
-
         let is_playing = self.is_playing.clone();
         let volume_bits = self.volume_bits.clone();
+        let playback_mode_bits = self.playback_mode_bits.clone();
         let frames_played = self.frames_played.clone();
         let flush_epoch = self.flush_epoch.clone();
         let tap = self.visualizer_tap.clone();
+        let pipeline_arc = self.dsp_pipeline.clone();
         let channels = self.channels as usize;
 
         let mut local_flush = flush_epoch.load(Ordering::Relaxed);
+        let mut local_pipeline = DspPipeline::new(self.sample_rate as f32);
 
         let stream = self.output.build_stream(move |data: &mut [f32]| {
             // Check for flush request
@@ -194,7 +245,27 @@ impl AudioEngine {
 
             let playing = is_playing.load(Ordering::Relaxed);
             let target_volume = f32::from_bits(volume_bits.load(Ordering::Relaxed));
-            gain.set_target(target_volume);
+            let mode_val = playback_mode_bits.load(Ordering::Relaxed);
+            let mode = match mode_val {
+                1 => PlaybackMode::HighQuality,
+                2 => PlaybackMode::BitPerfect,
+                3 => PlaybackMode::ExclusiveDsp,
+                _ => PlaybackMode::DefaultShared,
+            };
+
+            local_pipeline.set_mode(mode);
+            local_pipeline.set_volume(target_volume);
+
+            if let Ok(pipe_lock) = pipeline_arc.try_lock() {
+                // Copy EQ bands if changed
+                for (i, config) in pipe_lock.eq_left().configs().iter().enumerate() {
+                    local_pipeline.set_eq_band(i, config.gain_db);
+                }
+                local_pipeline
+                    .replay_gain_mut()
+                    .set_config(*pipe_lock.replay_gain().config());
+                local_pipeline.set_track_metadata(pipe_lock.replay_gain().metadata());
+            }
 
             if !playing {
                 data.fill(0.0);
@@ -206,11 +277,7 @@ impl AudioEngine {
                 let raw_l = consumer.pop().unwrap_or(0.0);
                 let raw_r = consumer.pop().unwrap_or(0.0);
 
-                let eq_l = eq_left.process_sample(raw_l);
-                let eq_r = eq_right.process_sample(raw_r);
-
-                let out_l = gain.process_sample(eq_l);
-                let out_r = gain.process_sample(eq_r);
+                let (out_l, out_r) = local_pipeline.process_stereo(raw_l, raw_r);
 
                 if num_channels == 1 {
                     chunk[0] = (out_l + out_r) * 0.5;
