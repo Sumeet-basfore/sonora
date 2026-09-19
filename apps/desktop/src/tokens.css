@@ -2,10 +2,10 @@
 :root {
   /* --- 2.1 Color Primitives & Foundations --- */
   --color-obsidian-950: #06070a;
-  --color-obsidian-900: #0c0d12;
-  --color-obsidian-800: #14161f;
-  --color-obsidian-700: #1c1f2b;
-  --color-obsidian-600: #262a3a;
+  --color-obsidian-900: #090a0f;
+  --color-obsidian-800: #11131a;
+  --color-obsidian-700: #181a24;
+  --color-obsidian-600: #242735;
 
   --color-slate-100: #f8fafc;
   --color-slate-200: #e2e8f0;
@@ -17,19 +17,19 @@
   --color-indigo-500: #6366f1;
   --color-indigo-400: #818cf8;
   --color-purple-500: #a855f7;
-  --color-amber-400: #fbbf24;
-  --color-emerald-400: #34d399;
-  --color-rose-500: #f43f5e;
+  --color-amber-400: #f59e0b;
+  --color-emerald-400: #10b981;
+  --color-rose-500: #ef4444;
 
   /* --- 2.2 Semantic Surface Tokens --- */
   --bg-base: var(--color-obsidian-900);
   --bg-surface: var(--color-obsidian-800);
-  --bg-surface-hover: #191c27;
+  --bg-surface-hover: #1a1b21;
   --bg-elevated: var(--color-obsidian-700);
   --bg-card: var(--color-obsidian-800);
   --bg-card-hover: rgba(255, 255, 255, 0.05);
-  --bg-glass-overlay: rgba(12, 13, 18, 0.88);
-  --bg-active: #282d3d;
+  --bg-glass-overlay: rgba(18, 20, 29, 0.85);
+  --bg-active: #242735;
 
   /* --- 2.3 Semantic Typography Tokens --- */
   --text-primary: var(--color-slate-100);
@@ -37,22 +37,22 @@
   --text-muted: var(--color-slate-400);
   --text-faint: var(--color-slate-500);
   --text-disabled: var(--color-slate-600);
-  --text-inverse: #0f172a;
+  --text-inverse: #090a0f;
 
   /* --- 2.4 Semantic Accent Tokens --- */
   --accent-primary: var(--color-indigo-500);
   --accent-hover: var(--color-indigo-400);
   --accent-primary-hover: var(--color-indigo-400);
   --accent-primary-active: #4338ca;
-  --accent-secondary: var(--color-purple-500);
+  --accent-secondary: #f59e0b;
   --accent-subtle: rgba(99, 102, 241, 0.15);
   --accent-glow: rgba(99, 102, 241, 0.35);
 
   /* --- 2.5 Semantic Borders & Dividers --- */
-  --border-subtle: rgba(255, 255, 255, 0.07);
-  --border-medium: rgba(255, 255, 255, 0.12);
-  --border-focus: var(--color-indigo-400);
-  --border-active: var(--color-indigo-400);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-medium: rgba(255, 255, 255, 0.14);
+  --border-focus: var(--color-indigo-500);
+  --border-active: rgba(99, 102, 241, 0.5);
 
   /* --- 2.6 Semantic States --- */
   --state-success: #10b981;

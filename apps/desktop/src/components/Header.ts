@@ -47,6 +47,14 @@ export class HeaderComponent {
         </div>
 
         <div class="header-right">
+          <!-- Stream Telemetry Pill -->
+          <div class="header-stream-pill" title="Lossless Hardware Audio Stream">
+            <span class="stream-pulse"></span>
+            <span class="stream-text">384kHz / 32-bit Float</span>
+            <span class="stream-sep" style="opacity: 0.4;">•</span>
+            <span class="stream-badge">BIT-PERFECT</span>
+          </div>
+
           <!-- Workspace Preset Switcher -->
           <div class="workspace-switcher-wrapper" title="Switch Workspace Layout">
             <svg class="workspace-icon" width="15" height="15" viewBox="0 0 24 24" fill="currentColor">

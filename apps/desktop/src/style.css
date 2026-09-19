@@ -347,6 +347,38 @@ input {
   gap: var(--space-3);
 }
 
+.header-stream-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--state-success);
+}
+
+.header-stream-pill .stream-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--state-success);
+  box-shadow: 0 0 8px var(--state-success);
+  animation: pulse-stream 2s infinite ease-in-out;
+}
+
+@keyframes pulse-stream {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+}
+
+.header-stream-pill .stream-badge {
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.04em;
+}
+
 /* --- Header Workspace Selector --- */
 .workspace-switcher-wrapper {
   display: flex;

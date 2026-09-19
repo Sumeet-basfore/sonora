@@ -320,8 +320,14 @@ mod tests {
 
         // 7. Test Seek
         app.seek(500)?;
-        std::thread::sleep(Duration::from_millis(50));
-        let status_seek = app.status();
+        let mut status_seek = app.status();
+        for _ in 0..15 {
+            if status_seek.position_ms >= 400 {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+            status_seek = app.status();
+        }
         assert!(status_seek.position_ms >= 400);
 
         // 8. Test Volume

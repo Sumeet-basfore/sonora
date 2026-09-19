@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><style>@layer base { html, body { margin: 0; padding: 0; } body { overscroll-behavior: none; } main > :first-child { margin-top: 0 !important; } main > :last-child { margin-bottom: 0 !important; } } ::-webkit-scrollbar { display: none; }</style><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..900&display=swap" rel="stylesheet"/><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-surface": "#e3e1e9", "outline": "#908fa0", "primary": "#c0c1ff", "on-primary-fixed": "#07006c", "tertiary-container": "#00885d", "on-primary-fixed-variant": "#2f2ebe", "surface": "#121318", "on-primary-container": "#0d0096", "on-secondary": "#472a00", "error": "#ffb4ab", "inverse-on-surface": "#2f3036", "surface-tint": "#c0c1ff", "on-tertiary-fixed-variant": "#005236", "surface-container-lowest": "#0d0e13", "error-container": "#93000a", "on-error-container": "#ffdad6", "primary-container": "#8083ff", "surface-dim": "#121318", "on-primary": "#1000a9", "surface-container-high": "#292a2f", "surface-variant": "#34343a", "primary-fixed-dim": "#c0c1ff", "on-secondary-container": "#5b3800", "surface-container-low": "#1a1b21", "inverse-primary": "#494bd6", "primary-fixed": "#e1e0ff", "tertiary-fixed-dim": "#4edea3", "on-error": "#690005", "surface-container": "#1e1f25", "tertiary": "#4edea3", "on-secondary-fixed-variant": "#653e00", "secondary-fixed-dim": "#ffb95f", "on-surface-variant": "#c7c4d7", "on-background": "#e3e1e9", "secondary": "#ffb95f", "secondary-fixed": "#ffddb8", "on-tertiary": "#003824", "surface-container-highest": "#34343a", "on-tertiary-container": "#000703", "background": "#121318", "outline-variant": "#464554", "tertiary-fixed": "#6ffbbe", "on-secondary-fixed": "#2a1700", "secondary-container": "#ee9800", "on-tertiary-fixed": "#002113", "surface-bright": "#38393f" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "margin-compact": "0.75rem", "space-sm": "0.5rem", "space-xs": "0.25rem", "margin": "1.25rem", "gutter-compact": "0.5rem", "gutter": "1rem", "space-lg": "1.25rem", "space-md": "0.75rem", "space-xl": "2rem" }, "fontFamily": { "body-md": ["Inter"], "headline-md": ["Inter"], "headline-sm": ["Inter"], "label-sm": ["JetBrains Mono"], "label-lg": ["JetBrains Mono"], "body-lg": ["Inter"], "headline-xl": ["Inter"], "label-md": ["JetBrains Mono"], "body-sm": ["Inter"], "headline-lg": ["Inter"] }, "fontSize": { "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "500" }], "headline-md": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }], "headline-sm": ["15px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "600" }], "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.06em", "fontWeight": "500" }], "label-lg": ["13px", { "lineHeight": "18px", "letterSpacing": "0.02em", "fontWeight": "600" }], "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "500" }], "headline-xl": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.03em", "fontWeight": "800" }], "label-md": ["11px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }], "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "500" }], "headline-lg": ["24px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "700" }] } } } };</script></head><body class="bg-surface-container-lowest text-on-surface font-body-md text-body-md select-none"><header class="fixed top-0 left-0 right-0 z-50 bg-surface-container-lowest/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-12 w-full px-space-md flex items-center justify-between gap-space-md"><div class="flex items-center gap-space-md shrink-0"><div class="flex items-center gap-space-xs"><div class="w-3 h-3 rounded-full bg-error"></div><div class="w-3 h-3 rounded-full bg-secondary"></div><div class="w-3 h-3 rounded-full bg-tertiary"></div></div><div class="flex items-center gap-space-xs"><img alt="Sonora Monogram Logo" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1UbWdOuGUaWYUmArS7ale5q4ZeCcbcf4Mk-0d5boUISfTqKid3lhuza1QLXCmC8jdBCNnbIp88yg2nl2_owWqSMB-TxVeDJzyX5N3m21thQY7BTdaSJnyoVbeORptALyEIhJdaulMtI-168vPY35MCqQ9JhkdUFFHEOzcSDPS8zq1TEE2mbbulBInjLLX_Gmaojy6U9yC0UoS23EDK6Lch-K-SRUEXT5JBZbim_HnzLsc8n8dvBJ6CcA18"/><span class="font-headline-sm text-headline-sm text-on-surface tracking-tight ml-space-xs">Sonora</span><span class="font-label-sm text-label-sm px-space-xs py-0.5 bg-surface-container-high rounded text-on-surface-variant">v0.2</span></div></div><div class="flex-1 max-w-md hidden md:flex items-center justify-center"><button class="w-full flex items-center justify-between px-space-md py-1.5 rounded-full bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors shadow-[0_1px_4px_rgba(0,0,0,0.2)]" type="button"><span class="flex items-center gap-space-xs font-body-sm text-body-sm"><span class="material-symbols-outlined text-base">search</span>Search library, online metadata, lyrics...</span><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant">⌘K</span></button></div><div class="flex items-center gap-space-sm shrink-0"><nav class="flex items-center p-0.5 rounded-full bg-surface-container" data-active-classes="bg-primary-container text-on-primary-container font-semibold"><a aria-current="page" class="px-space-sm py-1 rounded-full transition-colors bg-primary-container text-on-primary-container font-semibold" data-path="studio" href="#">1: Studio</a><a class="px-space-sm py-1 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="theater" href="#">2: Theater</a><a class="px-space-sm py-1 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="curator" href="#">3: Curator</a><a class="px-space-sm py-1 rounded-full font-label-md text-label-md text-on-surface-variant hover:text-on-surface transition-colors" data-path="minimal" href="#">4: Minimal</a></nav><div class="hidden lg:flex items-center gap-space-xs px-space-sm py-1 rounded-full bg-surface-container-low font-label-sm text-label-sm text-tertiary"><div class="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></div><span>384kHz / 32-bit Float</span><span class="text-outline">•</span><span class="font-semibold">BIT-PERFECT</span></div><button class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg">queue_music</span><span class="font-label-sm text-label-sm px-1 rounded-full bg-primary text-on-primary">14</span></button><button class="p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">settings</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><aside class="fixed left-0 top-12 bottom-24 w-60 bg-surface-container-lowest z-30 flex flex-col py-space-md"><div class="px-space-md mb-space-sm font-label-sm text-label-sm uppercase text-outline tracking-wider">Navigation Engine</div><nav class="flex-1 px-space-xs space-y-0.5" data-active-classes="bg-surface-container-high text-primary font-semibold"><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-colors bg-surface-container-high text-primary font-semibold" data-path="studio" href="#"><span class="material-symbols-outlined text-lg">graphic_eq</span>Master DSP</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="curator" href="#"><span class="material-symbols-outlined text-lg">library_music</span>Lossless Library</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="theater" href="#"><span class="material-symbols-outlined text-lg">waves</span>FFT Spectrum</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="minimal" href="#"><span class="material-symbols-outlined text-lg">fitbit</span>Mini Deck</a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors font-body-sm text-body-sm" data-path="pipeline-diagnostics" href="#"><span class="material-symbols-outlined text-lg">tune</span>Audio Routing</a></nav><div class="px-space-md pt-space-md font-label-sm text-label-sm text-outline flex items-center justify-between"><span>ASIO Core 2.8</span><span class="text-tertiary font-bold">LOCKED</span></div></aside><div class="pl-60"><main class="relative pt-12 pb-24 w-full min-h-screen bg-surface-container-lowest px-space-lg"><div class="flex flex-col w-full gap-space-lg pb-space-xl">
+<!-- Top Telemetry Ribbon & Engineering Header -->
+<div class="flex flex-wrap items-center justify-between gap-space-md p-space-md rounded-xl bg-surface-container-low shadow-sm">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-ping"></span>
+<span class="font-label-md text-label-md text-tertiary font-bold tracking-wider">ENGINE DOCK ACTIVE</span>
+</div>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<div class="flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>PIPELINE:</span>
+<span class="text-on-surface font-semibold">ASIO EXCLUSIVE • 384kHz 32-BIT FLOAT</span>
+</div>
+<div class="hidden xl:flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>DSP WORKER:</span>
+<span class="text-secondary font-semibold">SIMD AVX-512 CORE #4</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm">
+<div class="flex items-center bg-surface-container rounded-lg p-0.5">
+<button class="flex items-center gap-space-xs px-space-sm py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors" id="btn-snap-capture">
+<span class="material-symbols-outlined text-sm">photo_camera</span>
+<span>SNAP FFT</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-sm py-1 rounded font-label-sm text-label-sm text-primary hover:bg-surface-container-high transition-colors" id="btn-log-toggle">
+<span class="material-symbols-outlined text-sm">ssid_chart</span>
+<span>SPECTROGRAM</span>
+</button>
+</div>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<button class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors font-label-sm text-label-sm" id="btn-reset-peaks">
+<span class="material-symbols-outlined text-sm">restart_alt</span>
+<span>CLEAR CLIPS</span>
+</button>
+<div class="flex items-center gap-space-xs px-space-sm py-1 rounded-lg bg-tertiary/10 text-tertiary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-sm">verified</span>
+<span>BIT-PERFECT</span>
+</div>
+</div>
+</div>
+<!-- Primary Workspace Split Grid: Spectrum Deck + Parametric EQ Matrix -->
+<div class="grid grid-cols-1 xl:grid-cols-12 gap-space-lg items-start">
+<!-- Left Column: 64-Band Logarithmic Spectrum Visualizer + Loudness Monitors (xl:col-span-8) -->
+<div class="xl:col-span-8 flex flex-col gap-space-lg">
+<!-- 64-Band Real-Time Spectrum Card -->
+<div class="flex flex-col rounded-xl bg-surface-container-low p-space-lg shadow-md relative overflow-hidden">
+<div class="flex items-center justify-between pb-space-md mb-space-md">
+<div class="flex items-center gap-space-md">
+<span class="material-symbols-outlined text-primary text-xl">graphic_eq</span>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Logarithmic Fast Fourier Transform Analyzer</div>
+<div class="font-label-sm text-label-sm text-outline">64-BAND DUAL-PRECISION RTA • RESOLUTION: 4096 SAMPLES</div>
+</div>
+</div>
+<!-- Spectrum Telemetry Toolbars -->
+<div class="flex items-center gap-space-md">
+<div class="flex items-center gap-space-xs bg-surface-container px-space-sm py-1 rounded-lg">
+<label class="font-label-sm text-label-sm text-on-surface-variant">WINDOW:</label>
+<select class="bg-transparent text-on-surface font-label-sm text-label-sm focus:outline-none cursor-pointer" id="fft-window-select">
+<option class="bg-surface-container-high text-on-surface" value="blackman">Blackman-Harris</option>
+<option class="bg-surface-container-high text-on-surface" value="hann">Hann</option>
+<option class="bg-surface-container-high text-on-surface" value="flat">Flat-Top Exact</option>
+</select>
+</div>
+<div class="flex items-center gap-1 bg-surface-container p-0.5 rounded-lg">
+<button class="px-2 py-1 rounded font-label-sm text-label-sm bg-surface-container-highest text-primary" id="peak-decay-fast">FAST</button>
+<button class="px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" id="peak-decay-slow">SLOW</button>
+<button class="px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface" id="peak-decay-hold">HOLD</button>
+</div>
+</div>
+</div>
+<!-- Analyzer Canvas Display Bay with Logarithmic Ticks -->
+<div class="relative w-full h-80 bg-surface-container-lowest rounded-lg p-space-md flex flex-col justify-between overflow-hidden shadow-inner">
+<!-- Background Grid dB Lines -->
+<div class="absolute inset-x-space-md top-space-md bottom-8 flex flex-col justify-between pointer-events-none opacity-20">
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-error">+6 dB</span><div class="flex-1 ml-2 h-px bg-error"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-secondary">0 dB (REF)</span><div class="flex-1 ml-2 h-px bg-secondary"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-on-surface-variant">-6 dB</span><div class="flex-1 ml-2 h-px bg-outline"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-on-surface-variant">-12 dB</span><div class="flex-1 ml-2 h-px bg-outline"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-on-surface-variant">-24 dB</span><div class="flex-1 ml-2 h-px bg-outline"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-on-surface-variant">-48 dB</span><div class="flex-1 ml-2 h-px bg-outline"></div></div>
+<div class="flex items-center justify-between w-full"><span class="font-label-sm text-label-sm text-on-surface-variant">-96 dB (NOISE FLOOR)</span><div class="flex-1 ml-2 h-px bg-outline"></div></div>
+</div>
+<!-- Dynamic Bar Canvas SVG / High-Density Spectrum Container -->
+<div class="relative z-10 w-full h-64 flex items-end justify-between gap-[2px] pt-4">
+<!-- Programmatically simulated 64 logarithmic bands with decay needle lines -->
+<!-- Sub-bass / Bass Cluster -->
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1 shadow-[0_0_6px_#ffb95f]"></div>
+<div class="w-full h-[38%] bg-primary-container/80 rounded-t-xs hover:bg-primary transition-all"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1 shadow-[0_0_6px_#ffb95f]"></div>
+<div class="w-full h-[45%] bg-primary-container/80 rounded-t-xs hover:bg-primary transition-all"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2 shadow-[0_0_6px_#ffb95f]"></div>
+<div class="w-full h-[62%] bg-primary-container/80 rounded-t-xs hover:bg-primary transition-all"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5 shadow-[0_0_6px_#ffb95f]"></div>
+<div class="w-full h-[74%] bg-primary-container rounded-t-xs shadow-[0_0_8px_rgba(128,131,255,0.4)]"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2 shadow-[0_0_6px_#ffb95f]"></div>
+<div class="w-full h-[81%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[86%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[83%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[75%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[69%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[64%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<!-- Low-Mids 150Hz - 500Hz -->
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[58%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[52%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[50%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[47%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[54%] bg-primary-container/75 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[60%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[65%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[71%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[68%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[63%] bg-primary-container rounded-t-xs"></div>
+</div>
+<!-- Mids & Presence 500Hz - 3kHz -->
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[57%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[53%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[56%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[62%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[66%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[73%] bg-primary rounded-t-xs shadow-[0_0_10px_rgba(192,193,255,0.4)]"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2.5"></div>
+<div class="w-full h-[78%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[70%] bg-primary rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[65%] bg-primary-container rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[60%] bg-primary-container rounded-t-xs"></div>
+</div>
+<!-- High Frequencies 3kHz - 10kHz -->
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[55%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[51%] bg-primary-container/80 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[47%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[49%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[45%] bg-primary-container/70 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[42%] bg-primary-container/60 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[39%] bg-primary-container/60 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[36%] bg-primary-container/60 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-2"></div>
+<div class="w-full h-[33%] bg-primary-container/50 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[30%] bg-primary-container/50 rounded-t-xs"></div>
+</div>
+<!-- Ultra High / Air Band 10kHz - 20kHz -->
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[27%] bg-primary-container/50 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[24%] bg-primary-container/40 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[21%] bg-primary-container/40 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[18%] bg-primary-container/40 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1.5"></div>
+<div class="w-full h-[15%] bg-primary-container/30 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[12%] bg-primary-container/30 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[9%] bg-primary-container/30 rounded-t-xs"></div>
+</div>
+<div class="flex-1 h-full flex flex-col justify-end items-center group relative cursor-crosshair">
+<div class="w-full h-1 bg-secondary rounded-full mb-1"></div>
+<div class="w-full h-[7%] bg-primary-container/20 rounded-t-xs"></div>
+</div>
+</div>
+<!-- Logarithmic Frequency Ticks Anchor Line -->
+<div class="z-10 w-full pt-2 flex justify-between font-label-sm text-label-sm text-outline border-t border-outline-variant/30">
+<span class="text-primary font-semibold">20 Hz</span>
+<span>50 Hz</span>
+<span>100 Hz</span>
+<span>250 Hz</span>
+<span>500 Hz</span>
+<span class="text-primary font-semibold">1 kHz</span>
+<span>2.5 kHz</span>
+<span>5 kHz</span>
+<span>10 kHz</span>
+<span class="text-primary font-semibold">20 kHz</span>
+</div>
+</div>
+<!-- Spectrum Footer Telemetry Readout -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-space-md pt-space-md mt-space-md border-t border-outline-variant/20">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">ACTIVE PEAK REGION</span>
+<span class="font-label-lg text-label-lg text-secondary">52.8 Hz @ -1.4 dBFS</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">DYNAMIC RANGE RMS</span>
+<span class="font-label-lg text-label-lg text-on-surface">17.8 dB (RMS Floor -78dB)</span>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">PHASE CORRELATION</span>
+<div class="flex items-center gap-space-xs mt-0.5">
+<span class="font-label-lg text-label-lg text-tertiary">+0.94</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">(COHERENT STEREO)</span>
+</div>
+</div>
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">NYQUIST FREQUENCY</span>
+<span class="font-label-lg text-label-lg text-on-surface">96,000 Hz (BANDWIDTH 2x)</span>
+</div>
+</div>
+</div>
+<!-- DSP Telemetry & Loudness Monitoring Pod -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-lg">
+<!-- EBU R128 Loudness Bay -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm border-b border-outline-variant/20">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-secondary text-base">speed</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">EBU R128 Telemetry</span>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-secondary">ITU-BS.1770-4</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<!-- Integrated LUFS Readout -->
+<div class="flex items-baseline justify-between">
+<div>
+<div class="font-label-sm text-label-sm text-outline">INTEGRATED LOUDNESS</div>
+<div class="font-headline-xl text-headline-xl text-on-surface tracking-tight font-bold">-14.2 <span class="font-label-md text-label-md text-secondary font-normal">LUFS</span></div>
+</div>
+<div class="text-right">
+<div class="font-label-sm text-label-sm text-outline">TARGET OBJECTIVE</div>
+<div class="font-label-lg text-label-lg text-tertiary">-14.0 LUFS (±0.5)</div>
+</div>
+</div>
+<!-- Dynamic Momentary & Short-Term Gauges -->
+<div class="flex flex-col gap-space-xs">
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant">
+<span>MOMENTARY (400ms)</span>
+<span class="font-bold text-on-surface">-12.8 LUFS</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden flex">
+<div class="w-[68%] bg-gradient-to-r from-tertiary via-secondary to-primary rounded-full"></div>
+</div>
+<div class="flex justify-between font-label-sm text-label-sm text-on-surface-variant mt-2">
+<span>SHORT TERM (3s)</span>
+<span class="font-bold text-on-surface">-13.9 LUFS</span>
+</div>
+<div class="w-full h-2 rounded-full bg-surface-container-highest overflow-hidden flex">
+<div class="w-[62%] bg-gradient-to-r from-tertiary to-secondary rounded-full"></div>
+</div>
+</div>
+<!-- True Peak Ceiling & Loudness Range -->
+<div class="grid grid-cols-2 gap-space-sm pt-space-xs">
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">TRUE PEAK MAX</span>
+<span class="font-label-lg text-label-lg text-tertiary font-bold mt-0.5">-0.1 dBTP</span>
+<span class="font-label-sm text-label-sm text-tertiary/80">NO INTER-SAMPLE CLIP</span>
+</div>
+<div class="p-space-sm rounded-lg bg-surface-container flex flex-col">
+<span class="font-label-sm text-label-sm text-outline">LOUDNESS RANGE (LRA)</span>
+<span class="font-label-lg text-label-lg text-secondary font-bold mt-0.5">8.4 LU</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">HIGH DYNAMICS</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Rubato 64-bit Sinc Resampler & Jitter Diagnostics -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col justify-between shadow-sm">
+<div class="flex items-center justify-between pb-space-sm mb-space-sm border-b border-outline-variant/20">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-base">memory</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Rubato™ Resampler Engine</span>
+</div>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-highest text-primary">64-BIT DUAL-STAGE</span>
+</div>
+<div class="flex flex-col gap-space-md">
+<div class="flex items-center justify-between">
+<div>
+<span class="font-label-sm text-label-sm text-outline">UPSAMPLING RATIO</span>
+<div class="font-headline-md text-headline-md text-on-surface mt-0.5 font-bold">44.1 kHz <span class="text-primary font-normal">→</span> 384 kHz</div>
+</div>
+<div class="px-space-sm py-1 rounded bg-surface-container font-label-md text-label-md text-primary font-semibold">
+                8.707× SINC POLYNOMIAL
+              </div>
+</div>
+<!-- Pipeline Handover Specs -->
+<div class="space-y-2">
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container">
+<span class="font-label-sm text-label-sm text-outline">HARDWARE BUFFER JITTER</span>
+<span class="font-label-md text-label-md text-tertiary font-bold">0.00 ms (PLL STABLE)</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container">
+<span class="font-label-sm text-label-sm text-outline">ASIO DRIVER LATENCY</span>
+<span class="font-label-md text-label-md text-on-surface">64 Samples @ 0.17 ms</span>
+</div>
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container">
+<span class="font-label-sm text-label-sm text-outline">STOP-BAND ATTENUATION</span>
+<span class="font-label-md text-label-md text-on-surface">-180 dB Linear Phase</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-tertiary">check_circle</span>
+                Clock Sync: Master Crystal Direct
+              </span>
+<button class="font-label-sm text-label-sm text-primary hover:underline font-semibold">CALIBRATE</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Right Column: 10-Band Parametric Graphic EQ + High-Density Track Metadata (xl:col-span-4) -->
+<div class="xl:col-span-4 flex flex-col gap-space-lg">
+<!-- 10-Band Parametric Graphic EQ Hardware Rack -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col gap-space-md shadow-md">
+<!-- EQ Header & Presets -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-xl">tune</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Master Graphic EQ</span>
+</div>
+<div class="flex items-center gap-space-xs">
+<button class="px-2 py-0.5 rounded text-on-surface-variant hover:text-on-surface bg-surface-container font-label-sm text-label-sm transition-colors" id="eq-bypass-btn">
+              BYPASS
+            </button>
+<button class="p-1 rounded text-on-surface-variant hover:text-on-surface bg-surface-container transition-colors" id="eq-lock-btn">
+<span class="material-symbols-outlined text-sm">lock</span>
+</button>
+</div>
+</div>
+<!-- Presets Dropdown & Mode Selector -->
+<div class="flex items-center justify-between gap-space-sm">
+<div class="flex-1 bg-surface-container rounded-lg px-space-sm py-1 flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-outline">TARGET:</span>
+<select class="bg-transparent text-primary font-label-sm text-label-sm font-semibold focus:outline-none cursor-pointer" id="eq-preset-select">
+<option class="bg-surface-container-high text-on-surface" selected="" value="harman">Harman Target 2024</option>
+<option class="bg-surface-container-high text-on-surface" value="flat">Studio Flat</option>
+<option class="bg-surface-container-high text-on-surface" value="acoustic">Acoustic Clarity</option>
+<option class="bg-surface-container-high text-on-surface" value="bass">Sub-Bass Extension</option>
+<option class="bg-surface-container-high text-on-surface" value="vocal">Vocal Presence</option>
+<option class="bg-surface-container-high text-on-surface" value="hd800s">Sennheiser HD800S Corr</option>
+</select>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-1 rounded bg-surface-container-highest text-secondary">Q = 1.414</span>
+</div>
+<!-- Real-Time Spline Response Curve Graph Preview -->
+<div class="w-full h-24 bg-surface-container-lowest rounded-lg p-2 relative flex items-center justify-center overflow-hidden">
+<svg class="w-full h-full text-primary" fill="none" viewbox="0 0 320 80">
+<defs>
+<lineargradient id="curveGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#c0c1ff" stop-opacity="0.3"></stop>
+<stop offset="100%" stop-color="#c0c1ff" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- 0dB reference horizontal line -->
+<line stroke="#464554" stroke-dasharray="3 3" stroke-width="1" x1="0" x2="320" y1="40" y2="40"></line>
+<!-- Spline Fill & Stroke -->
+<path d="M 0 40 Q 32 30, 64 32 T 128 42 T 192 36 T 256 34 T 320 38 L 320 80 L 0 80 Z" fill="url(#curveGradient)"></path>
+<path d="M 0 40 Q 32 30, 64 32 T 128 42 T 192 36 T 256 34 T 320 38" stroke="#8083ff" stroke-linecap="round" stroke-width="2"></path>
+<!-- Nodes for Parametric Center points -->
+<circle cx="32" cy="30" fill="#ffb95f" r="3" stroke="#121318" stroke-width="1.5"></circle>
+<circle cx="64" cy="32" fill="#c0c1ff" r="3" stroke="#121318" stroke-width="1.5"></circle>
+<circle cx="128" cy="42" fill="#c0c1ff" r="3" stroke="#121318" stroke-width="1.5"></circle>
+<circle cx="192" cy="36" fill="#ffb95f" r="3" stroke="#121318" stroke-width="1.5"></circle>
+<circle cx="256" cy="34" fill="#c0c1ff" r="3" stroke="#121318" stroke-width="1.5"></circle>
+</svg>
+<span class="absolute top-1.5 left-2 font-label-sm text-label-sm text-outline">+12 dB</span>
+<span class="absolute bottom-1.5 left-2 font-label-sm text-label-sm text-outline">-12 dB</span>
+<span class="absolute right-2 bottom-1.5 font-label-sm text-label-sm text-secondary">RESP: +2.1dB MAX</span>
+</div>
+<!-- 10 Vertical dB Hardware Faders -->
+<div class="grid grid-cols-10 gap-1 h-56 pt-space-xs pb-space-xs">
+<!-- 31 Hz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+3.5</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[65%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[35%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">31</span>
+</div>
+<!-- 63 Hz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+2.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[58%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[42%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">63</span>
+</div>
+<!-- 125 Hz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-outline group-hover:text-primary">0.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[50%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[50%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-outline"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">125</span>
+</div>
+<!-- 250 Hz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-outline group-hover:text-primary">-1.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[45%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[55%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-outline"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">250</span>
+</div>
+<!-- 500 Hz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-outline group-hover:text-primary">-0.5</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[48%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[52%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-outline"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">500</span>
+</div>
+<!-- 1 kHz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-outline group-hover:text-primary">0.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[50%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[50%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-outline"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">1k</span>
+</div>
+<!-- 2 kHz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+1.5</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[57%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[43%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">2k</span>
+</div>
+<!-- 4 kHz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+2.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[60%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[40%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">4k</span>
+</div>
+<!-- 8 kHz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+1.0</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[55%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[45%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">8k</span>
+</div>
+<!-- 16 kHz -->
+<div class="flex flex-col items-center justify-between h-full group">
+<span class="font-label-sm text-label-sm text-secondary font-bold group-hover:text-primary">+0.5</span>
+<div class="relative w-2 flex-1 bg-surface-container-lowest rounded-full flex flex-col justify-end items-center my-1.5">
+<div class="w-full h-[52%] bg-primary-container/40 rounded-full"></div>
+<div class="absolute top-[48%] w-5 h-7 rounded-sm bg-surface-bright shadow-md cursor-ns-resize flex items-center justify-center">
+<div class="w-3 h-0.5 bg-primary"></div>
+</div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">16k</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-space-xs font-label-sm text-label-sm text-outline border-t border-outline-variant/20">
+<span>Linear Phase FIR Engine</span>
+<span class="text-tertiary">LATENCY: 0 SAMPLES (MIN)</span>
+</div>
+</div>
+<!-- Now Playing High-Density Lossless Metadata Card -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col gap-space-md shadow-md">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-tertiary text-lg">album</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">Active Lossless Master</span>
+</div>
+<span class="font-label-sm text-label-sm px-2 py-0.5 rounded bg-tertiary/15 text-tertiary font-bold">DR14 VERIFIED</span>
+</div>
+<!-- Artwork & Immediate Track Details -->
+<div class="flex items-center gap-space-md">
+<div class="relative w-24 h-24 rounded-lg overflow-hidden bg-surface-container-highest shrink-0 shadow-lg group cursor-pointer">
+<img alt="Album artwork for Resonance in C Minor" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeo-JpgVWTgrUnYg1lDTiMvLPDXY9TGOrJIx5dHWcvzTbcrj_RlLl5hYQ_wvka7jqAnZBIWwcdH70w1yGHslx1F3T1nsodCq_AizTN_s2suzwx_hzjKdJtl6UYp650G8OijF95dsIDaxzOCndmb-y7_inuG0YebAs4Ka5ds7BYN9rkaE8BsZA2sCgkoYiqhvxW8bQMg5ck6YKqc0og2CGXBK6ORyzq8-oNVuaFV4wSXk-bQzZr4YyO"/>
+<div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent flex items-end p-1">
+<span class="font-label-sm text-label-sm text-tertiary font-bold">FLAC 24/192</span>
+</div>
+</div>
+<div class="flex flex-col min-w-0 flex-1">
+<div class="font-headline-md text-headline-md text-on-surface truncate">Resonance in C Minor</div>
+<div class="font-body-sm text-body-sm text-on-surface-variant truncate">Isochrone • Monolith Architecture</div>
+<div class="font-label-sm text-label-sm text-outline mt-1 truncate">Track 04 of 12 • Label: Hyperion Electromusic</div>
+<div class="flex items-center gap-space-xs mt-2">
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-secondary font-semibold">2024 Remaster</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-on-surface-variant">Sovereign NVMe</span>
+</div>
+</div>
+</div>
+<!-- High-Density Telemetry Matrix Grid -->
+<div class="grid grid-cols-2 gap-space-xs p-space-sm rounded-lg bg-surface-container-lowest">
+<div class="flex flex-col p-1.5 border-b border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-outline">AUDIO CODEC</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">FLAC (.flac)</span>
+</div>
+<div class="flex flex-col p-1.5 border-b border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-outline">SAMPLE RATE</span>
+<span class="font-label-md text-label-md text-tertiary font-semibold">192,000 Hz</span>
+</div>
+<div class="flex flex-col p-1.5 border-b border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-outline">QUANTIZATION</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">24-bit True Integer</span>
+</div>
+<div class="flex flex-col p-1.5 border-b border-outline-variant/20">
+<span class="font-label-sm text-label-sm text-outline">ACTIVE BITRATE</span>
+<span class="font-label-md text-label-md text-secondary font-semibold">4,608 kbps Variable</span>
+</div>
+<div class="flex flex-col p-1.5">
+<span class="font-label-sm text-label-sm text-outline">REPLAYGAIN TRACK</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">-2.4 dB (Applied)</span>
+</div>
+<div class="flex flex-col p-1.5">
+<span class="font-label-sm text-label-sm text-outline">REPLAYGAIN ALBUM</span>
+<span class="font-label-md text-label-md text-on-surface font-semibold">-3.1 dB (Matched)</span>
+</div>
+</div>
+<!-- Storage & Routing Footnote -->
+<div class="flex items-center justify-between text-on-surface-variant font-label-sm text-label-sm px-1">
+<span class="flex items-center gap-1 truncate">
+<span class="material-symbols-outlined text-xs text-primary">hard_drive</span>
+            /Volumes/AudioMaster/FLAC_24192/Isochrone/
+          </span>
+<span class="text-tertiary shrink-0">CRC32 OK</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Command Drawer: Audio Routing Pipeline Matrix & Quick Actions -->
+<div class="p-space-lg rounded-xl bg-surface-container-low flex flex-col md:flex-row items-center justify-between gap-space-md shadow-sm">
+<div class="flex items-center gap-space-lg">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-primary text-xl">route</span>
+<div>
+<div class="font-headline-sm text-headline-sm text-on-surface">Deterministic Audio Route</div>
+<div class="font-label-sm text-label-sm text-outline">HARDWARE SINK: TOPPING D90 III SABRE (DUAL ES9039SPRO)</div>
+</div>
+</div>
+<div class="hidden lg:flex items-center gap-space-xs font-label-sm text-label-sm text-on-surface-variant">
+<span>INTERCONNECT:</span>
+<span class="px-2 py-0.5 rounded bg-surface-container font-label-md text-label-md text-tertiary">ASIO CORE v2.8 (ISOMANIC USB)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-sm w-full md:w-auto justify-end">
+<button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-base">alt_route</span>
+<span>A/B COMPARISON</span>
+</button>
+<button class="flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-primary-container text-on-primary-container font-label-sm text-label-sm font-semibold hover:brightness-110 active:scale-95 transition-all shadow-[0_0_12px_rgba(128,131,255,0.3)]">
+<span class="material-symbols-outlined text-base">equalizer</span>
+<span>SAVE CALIBRATION PROFILE</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+  // Simple micro-interactions for presets and visual buttons
+  const presetSelect = document.getElementById('eq-preset-select');
+  const bypassBtn = document.getElementById('eq-bypass-btn');
+  const decayBtns = [document.getElementById('peak-decay-fast'), document.getElementById('peak-decay-slow'), document.getElementById('peak-decay-hold')];
+
+  if (bypassBtn) {
+    bypassBtn.addEventListener('click', () => {
+      const isBypassed = bypassBtn.classList.toggle('bg-error/20');
+      bypassBtn.classList.toggle('text-error');
+      bypassBtn.textContent = isBypassed ? 'BYPASS ACTIVE' : 'BYPASS';
+    });
+  }
+
+  decayBtns.forEach(btn => {
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      decayBtns.forEach(b => {
+        if (b) {
+          b.className = 'px-2 py-1 rounded font-label-sm text-label-sm text-on-surface-variant hover:text-on-surface';
+        }
+      });
+      btn.className = 'px-2 py-1 rounded font-label-sm text-label-sm bg-surface-container-highest text-primary';
+    });
+  });
+
+  const clearClipsBtn = document.getElementById('btn-reset-peaks');
+  if (clearClipsBtn) {
+    clearClipsBtn.addEventListener('click', () => {
+      clearClipsBtn.classList.add('scale-95');
+      setTimeout(() => clearClipsBtn.classList.remove('scale-95'), 150);
+    });
+  }
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-24 z-50 bg-surface-container-lowest/95 backdrop-blur-2xl shadow-[0_-1px_12px_rgba(0,0,0,0.4)]"><div class="h-24 w-full px-space-md flex items-center justify-between gap-space-lg"><div class="w-80 shrink-0 flex items-center gap-space-md"><div class="w-14 h-14 rounded-xl bg-surface-container-high flex items-center justify-center shrink-0 shadow-inner"><span class="material-symbols-outlined text-primary text-2xl">album</span></div><div class="min-w-0 flex-1"><div class="font-headline-sm text-headline-sm text-on-surface truncate">Resonance in C Minor (2024 Remaster)</div><div class="font-body-sm text-body-sm text-on-surface-variant truncate">Isochrone • Monolith Architecture</div><div class="mt-1 flex items-center gap-space-xs"><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-secondary">FLAC 192kHz / 24-bit</span><span class="font-label-sm text-label-sm px-1.5 py-0.5 rounded bg-surface-container-high text-tertiary">DR14</span></div></div></div><div class="flex-1 max-w-2xl flex flex-col items-center gap-space-xs"><div class="flex items-center gap-space-lg"><button class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">shuffle</span></button><button class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-2xl">skip_previous</span></button><button class="w-11 h-11 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center shadow-[0_0_16px_rgba(128,131,255,0.4)] hover:brightness-110 active:scale-95 transition-all" type="button"><span class="material-symbols-outlined text-2xl">play_arrow</span></button><button class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-2xl">skip_next</span></button><button class="text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-xl">repeat</span></button></div><div class="w-full flex items-center gap-space-md"><span class="font-label-sm text-label-sm text-on-surface-variant w-10 text-right">04:18</span><div class="flex-1 h-1.5 rounded-full bg-surface-container-high relative cursor-pointer group"><div class="absolute left-0 top-0 bottom-0 w-3/5 rounded-full bg-primary group-hover:bg-primary-container transition-colors"></div><div class="absolute left-[60%] top-1/2 -translate-x-1/2 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-primary shadow-[0_0_8px_rgba(192,193,255,0.8)]"></div></div><span class="font-label-sm text-label-sm text-on-surface-variant w-10 text-left">-03:22</span></div></div><div class="w-80 shrink-0 flex items-center justify-end gap-space-md"><div class="flex items-end gap-0.5 h-6 w-14 px-1 py-0.5 rounded bg-surface-container-low"><span class="w-1 bg-tertiary h-2 rounded-t-sm"></span><span class="w-1 bg-tertiary h-4 rounded-t-sm"></span><span class="w-1 bg-tertiary h-5 rounded-t-sm"></span><span class="w-1 bg-tertiary h-3 rounded-t-sm"></span><span class="w-1 bg-tertiary h-6 rounded-t-sm"></span><span class="w-1 bg-tertiary h-2 rounded-t-sm"></span></div><button class="p-1.5 rounded-lg bg-surface-container text-primary hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-lg">lyrics</span></button><div class="flex items-center gap-space-xs px-space-sm py-1 rounded bg-surface-container-low"><span class="material-symbols-outlined text-tertiary text-base">cable</span><span class="font-label-sm text-label-sm text-on-surface-variant max-w-[100px] truncate">DAC - USB 2.0</span></div><div class="flex items-center gap-space-xs"><span class="material-symbols-outlined text-on-surface-variant text-lg">volume_up</span><div class="w-16 h-1.5 rounded-full bg-surface-container-high relative cursor-pointer"><div class="absolute left-0 top-0 bottom-0 w-4/5 rounded-full bg-primary"></div></div><span class="font-label-sm text-label-sm text-on-surface-variant">-3.2dB</span></div></div></div></footer></body></html>
