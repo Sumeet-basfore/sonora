@@ -68,7 +68,7 @@ jobs:
   build-linux:
     name: Build Linux Packages (x86_64)
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -91,7 +91,9 @@ jobs:
             squashfs-tools \
             file \
             patchelf \
-            librsvg2-dev
+            librsvg2-dev \
+            libappindicator3-dev \
+            xdg-utils
           (sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2 || true)
 
       - name: Setup Rust toolchain
