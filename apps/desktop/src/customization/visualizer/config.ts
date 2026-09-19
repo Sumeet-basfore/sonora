@@ -26,7 +26,7 @@ export const DEFAULT_VISUALIZER_CONFIG: VisualizerConfig = {
   height: 120,
   fps: 60,
   colorSource: 'accent',
-  displayMode: 'floating',
+  displayMode: 'docked',
   enabled: true,
 };
 

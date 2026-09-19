@@ -150,6 +150,7 @@ export class LayoutManager {
     const root = document.querySelector('.app-layout');
     if (!root) return;
 
+    root.setAttribute('data-active-layout', this.activeLayout.id);
     for (const [region, visible] of Object.entries(this.currentRegions)) {
       root.setAttribute(`data-show-${region}`, visible ? 'true' : 'false');
     }

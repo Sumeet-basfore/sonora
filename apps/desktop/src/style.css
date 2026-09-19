@@ -3546,20 +3546,47 @@ input {
 }
 
 /* --- Visualizer Docked Strip vs Floating --- */
-.visualizer-container.docked-strip {
+.visualizer-panel.docked-strip,
+#visualizer-container.docked-strip {
   position: absolute;
   left: var(--sidebar-width);
   right: var(--now-playing-width);
   bottom: var(--playback-bar-height);
   width: auto;
-  height: 64px;
+  height: 96px;
   border-radius: 0;
   border-left: none;
   border-right: none;
   border-bottom: none;
+  border-top: 1px solid var(--border-subtle);
   z-index: 15;
-  background: rgba(12, 13, 17, 0.88);
-  backdrop-filter: blur(12px);
+  background: rgba(9, 10, 15, 0.94);
+  backdrop-filter: blur(16px);
+  box-shadow: none;
+}
+
+.visualizer-panel.docked-strip .visualizer-body,
+#visualizer-container.docked-strip .visualizer-body {
+  height: 64px !important;
+  padding: 0 var(--space-4);
+}
+
+.app-layout[data-show-sidebar="false"] .visualizer-panel.docked-strip,
+.app-layout[data-show-sidebar="false"] #visualizer-container.docked-strip {
+  left: 0;
+}
+
+.app-layout[data-show-nowPlaying="false"] .visualizer-panel.docked-strip,
+.app-layout[data-show-nowPlaying="false"] #visualizer-container.docked-strip {
+  right: 0;
+}
+
+@media (max-width: 900px) {
+  .visualizer-panel.docked-strip,
+  #visualizer-container.docked-strip {
+    left: 80px;
+    right: 0;
+  }
 }
 
 /* --- Final Product Pass: Precision Visual Hierarchy & Micro-Interactions --- */
