@@ -392,6 +392,10 @@ mod tests {
         ];
 
         for (format_name, path, mode) in &test_cases {
+            if !path.exists() {
+                println!("  [Skip] Test audio file {:?} not present in environment", path);
+                continue;
+            }
             println!("\n--------------------------------------------------------");
             println!("Testing Format: {format_name}");
             println!("  Source File: {:?}", path);
