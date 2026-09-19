@@ -12,10 +12,11 @@ html,
 body {
   width: 100%;
   height: 100%;
+  height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--bg-base, #0c0d11);
+  background-color: var(--bg-base, #090a0f);
   color: var(--text-primary, #f8fafc);
   font-family: var(--font-sans, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif);
   font-size: var(--text-base, 14px);
@@ -26,13 +27,17 @@ body {
 }
 
 #app {
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: 0;
   padding: 0;
   overflow: hidden;
-  background-color: var(--bg-base, #0c0d11);
+  background-color: var(--bg-base, #090a0f);
   color: var(--text-primary, #f8fafc);
+  position: fixed;
+  inset: 0;
 }
 
 button {
@@ -57,10 +62,13 @@ input {
 /* --- App Layout Matrix (3-Zone Cohesive Architecture) --- */
 .app-layout {
   display: grid;
-  grid-template-columns: var(--sidebar-width) 1fr var(--now-playing-width);
-  grid-template-rows: 1fr var(--playback-bar-height);
-  width: 100vw;
-  height: 100vh;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) var(--now-playing-width);
+  grid-template-rows: minmax(0, 1fr) var(--playback-bar-height);
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-width: 100vw;
+  max-height: 100%;
   position: relative;
   overflow: hidden;
   background-color: var(--bg-base);
@@ -68,15 +76,15 @@ input {
 
 /* Regional display overrides */
 .app-layout[data-show-sidebar="false"] {
-  grid-template-columns: 0px 1fr var(--now-playing-width);
+  grid-template-columns: 0px minmax(0, 1fr) var(--now-playing-width);
 }
 
 .app-layout[data-show-nowPlaying="false"] {
-  grid-template-columns: var(--sidebar-width) 1fr 0px;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr) 0px;
 }
 
 .app-layout[data-show-sidebar="false"][data-show-nowPlaying="false"] {
-  grid-template-columns: 0px 1fr 0px;
+  grid-template-columns: 0px minmax(0, 1fr) 0px;
 }
 
 .app-layout[data-show-library="false"] {
@@ -231,6 +239,8 @@ input {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
   background-color: var(--bg-base);
 }
@@ -1190,16 +1200,21 @@ input {
   background: var(--bg-surface);
   border-top: 1px solid var(--border-subtle);
   height: var(--playback-bar-height);
+  min-height: var(--playback-bar-height);
+  max-height: var(--playback-bar-height);
   z-index: 20;
+  width: 100%;
 }
 
 .playback-bar-inner {
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: minmax(180px, 1fr) minmax(280px, 2fr) minmax(180px, 1fr);
   align-items: center;
   height: 100%;
   padding: 0 var(--space-4);
   gap: var(--space-4);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Playback Left */
@@ -1926,7 +1941,10 @@ input {
 /* --- Responsive Adjustments --- */
 @media (max-width: 900px) {
   .app-layout {
-    grid-template-columns: 80px 1fr;
+    grid-template-columns: 80px minmax(0, 1fr) 0px;
+  }
+  .app-layout .now-playing-stage {
+    display: none;
   }
   .brand-title-group,
   .nav-item span,
