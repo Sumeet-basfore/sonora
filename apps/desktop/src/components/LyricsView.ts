@@ -110,10 +110,13 @@ export class LyricsViewComponent {
         <!-- Main Lyrics Scroll Container -->
         <div class="lyrics-body" id="lyrics-scroll-body" tabindex="0">
           <div class="lyrics-empty-state">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" opacity="0.4">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-            <p>Play a track to view synchronized lyrics</p>
+            <div class="lyrics-empty-icon-wrap" style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.04) 70%); display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-primary);">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+            <h3>Sing along with lyrics</h3>
+            <p class="subtle-text">Play a song from your library to view real-time synchronized lyrics.</p>
           </div>
         </div>
 
@@ -389,10 +392,13 @@ export class LyricsViewComponent {
         if (badge) badge.textContent = 'Idle';
         scrollBody.innerHTML = `
           <div class="lyrics-empty-state">
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" opacity="0.4">
-              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-            <p>Play a track to view synchronized lyrics</p>
+            <div class="lyrics-empty-icon-wrap" style="width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle, rgba(99, 102, 241, 0.2) 0%, rgba(99, 102, 241, 0.04) 70%); display: flex; align-items: center; justify-content: center; margin-bottom: 8px;">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="color: var(--accent-primary);">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+            <h3>Sing along with lyrics</h3>
+            <p class="subtle-text">Play a song from your library to view real-time synchronized lyrics.</p>
           </div>
         `;
         break;
