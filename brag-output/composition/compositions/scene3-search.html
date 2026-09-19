@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Sonora - Universal Search</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #090a0f;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #090a0f;
+      }
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-size: 60px 60px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        pointer-events: none;
+      }
+      .ambient-glow-indigo {
+        position: absolute;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .ambient-glow-amber {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .glass-card {
+        background: rgba(18, 20, 29, 0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+      }
+      .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .pill-badge.active-indigo {
+        border-color: rgba(129, 140, 248, 0.5);
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+      }
+      .pill-badge.active-amber {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: rgba(245, 158, 11, 0.15);
+        color: #fde68a;
+      }
+      .pill-badge.active-emerald {
+        border-color: rgba(52, 211, 153, 0.5);
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+      }
+      .gradient-title {
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .search-box {
+        width: 820px;
+        background: rgba(15, 18, 28, 0.95);
+        border: 1px solid rgba(99, 102, 241, 0.4);
+        box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(99, 102, 241, 0.25);
+        border-radius: 14px;
+        overflow: hidden;
+      }
+      .search-header {
+        display: flex;
+        align-items: center;
+        padding: 18px 24px;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      }
+      .search-input-text {
+        font-size: 22px;
+        color: #f8fafc;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+        flex: 1;
+      }
+      .search-cursor {
+        display: inline-block;
+        width: 2px;
+        height: 24px;
+        background: #6366f1;
+        margin-left: 2px;
+        vertical-align: middle;
+      }
+      .search-result-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.02);
+      }
+      .search-result-item.highlighted {
+        background: rgba(99, 102, 241, 0.15);
+        border-left: 4px solid #6366f1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene3-search" data-width="1920" data-height="1080">
+      <div class="bg-grid"></div>
+      <div class="ambient-glow-indigo" data-layout-allow-overflow style="top: -150px; right: 300px;"></div>
+      <div class="ambient-glow-amber" data-layout-allow-overflow style="bottom: -150px; left: 200px;"></div>
+
+      <div id="s3-header" style="position: absolute; top: 54px; left: 120px; z-index: 10; opacity: 0;">
+        <div class="pill-badge active-indigo" style="margin-bottom: 12px;">
+          UNIVERSAL COMMAND PALETTE (CMD + K)
+        </div>
+        <h2 style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em;" class="gradient-title">
+          Instant Local Search. Zero-Trust Online Enrichment.
+        </h2>
+      </div>
+
+      <div id="s3-search" class="search-box" style="margin-top: 80px; z-index: 20; opacity: 0;">
+        <div class="search-header">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2.5">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <div class="search-input-text mono">
+            <span id="s3-typed-text"></span><span class="search-cursor"></span>
+          </div>
+          <div class="pill-badge active-indigo" style="font-size: 11px; padding: 4px 10px;">Sub-5ms FTS5</div>
+        </div>
+
+        <div id="s3-results" style="padding: 10px 0;">
+          <div id="s3-item1" class="search-result-item highlighted" style="opacity: 0;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 44px; height: 44px; border-radius: 8px; background: #312e81; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #a5b4fc;">
+                RAM
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 700; color: #ffffff;">Random Access Memories</div>
+                <div style="font-size: 13px; color: #cbd5e1;">Daft Punk • 2013 • FLAC 96kHz/24-bit Lossless</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span class="pill-badge active-emerald" style="font-size: 11px; padding: 3px 8px;">98% MATCH</span>
+              <div style="font-size: 11px; color: #cbd5e1; margin-top: 4px;" class="mono">MBID: e8e332...</div>
+            </div>
+          </div>
+
+          <div id="s3-item2" class="search-result-item" style="opacity: 0;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 44px; height: 44px; border-radius: 8px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #cbd5e1;">
+                DP
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 700; color: #f1f5f9;">Get Lucky (feat. Pharrell Williams)</div>
+                <div style="font-size: 13px; color: #cbd5e1;">Track 8 • 4:08 • MusicBrainz Verified</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span class="pill-badge active-indigo" style="font-size: 11px; padding: 3px 8px;">LOCAL TRACK</span>
+            </div>
+          </div>
+
+          <div id="s3-item3" class="search-result-item" style="opacity: 0;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+              <div style="width: 44px; height: 44px; border-radius: 8px; background: #2e1065; display: flex; align-items: center; justify-content: center; font-weight: 700; color: #c084fc;">
+                CAA
+              </div>
+              <div>
+                <div style="font-size: 16px; font-weight: 700; color: #f1f5f9;">Cover Art Archive & Fanart.tv</div>
+                <div style="font-size: 13px; color: #cbd5e1;">Ultra-HD Front Cover • 3000x3000px Hi-Res</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <span class="pill-badge active-amber" style="font-size: 11px; padding: 3px 8px;">ENRICHED ART</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="s3-badges" style="display: flex; gap: 20px; margin-top: 36px; z-index: 20; opacity: 0;">
+        <div class="glass-card" style="padding: 14px 22px; display: flex; align-items: center; gap: 12px;">
+          <div style="color: #60a5fa; font-weight: 800; font-size: 20px;">⚡</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700;">SQLite FTS5 Porter Stemmer</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Zero-allocation query execution</div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="padding: 14px 22px; display: flex; align-items: center; gap: 12px;">
+          <div style="color: #f59e0b; font-weight: 800; font-size: 20px;">🛡️</div>
+          <div>
+            <div style="font-size: 14px; font-weight: 700;">Never Overwrites Silently</div>
+            <div style="font-size: 12px; color: #cbd5e1;">Manual inspection & candidate diffing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#s3-header", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+      tl.fromTo("#s3-search", 
+        { opacity: 0, scale: 0.92, y: 40 }, 
+        { opacity: 1, scale: 1, y: 0, duration: 0.6, ease: "expo.out" }, 
+        0.2
+      );
+
+      const textToType = "Daft Punk - Random Access Memories";
+      const typedEl = document.getElementById("s3-typed-text");
+      const typeDuration = 1.0;
+      const stepTime = typeDuration / textToType.length;
+      
+      for (let i = 1; i <= textToType.length; i++) {
+        const sub = textToType.substring(0, i);
+        tl.call(() => { typedEl.textContent = sub; }, null, 0.4 + (i * stepTime));
+      }
+
+      tl.fromTo("#s3-item1", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.6);
+      tl.fromTo("#s3-item2", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 1.8);
+      tl.fromTo("#s3-item3", { opacity: 0, y: 15 }, { opacity: 1, y: 0, duration: 0.35, ease: "power2.out" }, 2.0);
+
+      tl.fromTo("#s3-badges", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 2.3);
+
+      tl.to("#root", { opacity: 0, scale: 0.95, duration: 0.4, ease: "power2.in" }, 4.1);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene3-search"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

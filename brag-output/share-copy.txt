@@ -1,0 +1,70 @@
+# Sonora (v0.2) Launch Copy & Distribution Kit
+
+==================================================
+1. X / TWITTER (LAUNCH THREAD)
+==================================================
+🎵 Your music isn't a stream. It's an instrument.
+
+Introducing Sonora v0.2 — the sovereign, bit-perfect music player built for audiophiles and collectors who refuse streaming compromises.
+
+✨ 384kHz / 32-bit float lossless playback
+✨ Dual-decoder gapless engine (Symphonia + Rubato sinc resampler)
+✨ Real-time 60 FPS 64-band spectrum visualizer
+✨ Universal Search (Cmd+K) with sub-5ms SQLite FTS5 index
+✨ Zero-trust MusicBrainz metadata & multi-provider artwork enrichment
+✨ Millisecond-synced lyrics with ±10ms precision offset
+✨ 4 native workspaces: Audiophile Studio, Atmospheric Theater, Modern Curator, Minimal Player
+
+100% Local-First. Zero Cloud Lock-in. Open Source.
+
+🔗 GitHub: https://github.com/Sumeet-basfore/sonora
+📺 Video Demo: [Attached: brag.mp4]
+
+#Audiophile #Rust #OpenSource #HiResAudio #LocalFirst #Linux #DesktopApp
+
+==================================================
+2. REDDIT (r/audiophile, r/rust, r/linux)
+==================================================
+Title: Sonora v0.2 — A Sovereign, Bit-Perfect Audiophile Music Player built in Rust & TypeScript
+
+Hey everyone!
+
+Most modern music players have turned into web wrappers for rental streaming services. We built Sonora with a single principle: you own your music, and playback should be an uncompromising, high-precision instrument.
+
+Key Highlights in v0.2:
+• True Bit-Perfect Pipeline: Dual-decoder architecture with gapless buffer preloading, 64-bit Rubato sinc resampler, and EBU R128 / ReplayGain 2.0 true peak limiter.
+• Dedicated Audio DSP Thread: Real-time 60 FPS logarithmic spectrum analyzer running completely decoupled from UI rendering.
+• Universal Command Palette (Cmd+K / /): Instant sub-5ms library search powered by SQLite FTS5, plus asynchronous online MusicBrainz metadata enrichment that NEVER secretly touches your audio files.
+• Synced Lyrics Engine (Cmd+L): Millisecond-accurate word/line sync via LRCLIB with manual ±10ms stepper and local fallback caching.
+• 4 Custom Modular Workspaces: From the dense telemetry of Audiophile Studio to the immersive full-bleed artwork of Atmospheric Theater.
+
+Available on Linux (.AppImage, .deb, CLI), Windows (.msi, .exe), and macOS (.dmg).
+
+Repo & Releases: https://github.com/Sumeet-basfore/sonora
+
+Would love your feedback on the audio DSP pipeline and enrichment workflow!
+
+==================================================
+3. HACKER NEWS (Show HN)
+==================================================
+Show HN: Sonora – Sovereign, bit-perfect desktop music player in Rust & TypeScript
+
+Sonora is an open-source, local-first music player designed as a high-precision audiophile instrument.
+
+Architecture highlights:
+- Audio Core: Dual-decoder Symphonia audio pipeline in Rust with gapless background buffer preloading, 64-bit sinc resampler, and true peak safety limiting.
+- Data & Indexing: SQLite WAL with FTS5 tokenization delivering sub-5ms full-text library queries.
+- Enrichment Pipeline: Ranked candidate matching across MusicBrainz, Cover Art Archive, Fanart.tv, and LRCLIB with side-by-side diff inspectors (zero silent file mutations).
+- Cross-Platform UI: Obsidian-dark, keyboard-first desktop UI with 4 modular workspaces and real-time spectrum visualization.
+
+Code & video demo: https://github.com/Sumeet-basfore/sonora
+
+==================================================
+4. LINKEDIN / PRODUCT LAUNCH
+==================================================
+Proud to introduce Sonora v0.2 — redefining the local-first audiophile listening experience.
+
+Built with Rust and modern TypeScript, Sonora merges high-fidelity audio engineering (384kHz/32-bit float, dual-decoder gapless playback, EBU R128 loudness normalization) with modern desktop ergonomics (sub-5ms universal search, zero-trust online metadata matching, synced lyrics, and 4 modular workspaces).
+
+Explore the open-source release on GitHub:
+👉 https://github.com/Sumeet-basfore/sonora

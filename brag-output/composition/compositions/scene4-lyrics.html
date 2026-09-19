@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Sonora - Synced Lyrics & Workspaces</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #090a0f;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #090a0f;
+      }
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-size: 60px 60px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        pointer-events: none;
+      }
+      .ambient-glow-indigo {
+        position: absolute;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .ambient-glow-amber {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .glass-card {
+        background: rgba(18, 20, 29, 0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+      }
+      .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .pill-badge.active-indigo {
+        border-color: rgba(129, 140, 248, 0.5);
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+      }
+      .pill-badge.active-amber {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: rgba(245, 158, 11, 0.15);
+        color: #fde68a;
+      }
+      .gradient-title {
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .window-frame {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(99, 102, 241, 0.2);
+        background: #11131a;
+      }
+      .window-header {
+        height: 38px;
+        background: #161822;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+      }
+      .dot { width: 11px; height: 11px; border-radius: 50%; }
+      .dot-red { background: #ef4444; }
+      .dot-yellow { background: #eab308; }
+      .dot-green { background: #22c55e; }
+      .window-title { margin-left: 12px; font-size: 13px; color: #cbd5e1; font-weight: 500; }
+      .lyric-line {
+        font-size: 26px;
+        font-weight: 600;
+        color: #cbd5e1;
+        margin: 14px 0;
+      }
+      .lyric-line.active {
+        font-size: 32px;
+        font-weight: 700;
+        color: #fde68a;
+        text-shadow: 0 0 25px rgba(245, 158, 11, 0.6);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene4-lyrics" data-width="1920" data-height="1080">
+      <div class="bg-grid"></div>
+      <div class="ambient-glow-indigo" data-layout-allow-overflow style="top: 100px; right: -100px;"></div>
+      <div class="ambient-glow-amber" data-layout-allow-overflow style="bottom: -100px; left: -100px;"></div>
+
+      <div id="s4-header" style="position: absolute; top: 54px; left: 120px; z-index: 10; opacity: 0;">
+        <div class="pill-badge active-amber" style="margin-bottom: 12px;">
+          MILLISECOND-ACCURATE SYNCED LYRICS (CMD + L)
+        </div>
+        <h2 style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em;" class="gradient-title">
+          Atmospheric Theater. 4 Modular Workspaces.
+        </h2>
+      </div>
+
+      <div style="display: flex; gap: 40px; align-items: center; margin-top: 80px; z-index: 20; width: 1500px;">
+        <div id="s4-window" class="window-frame" style="width: 850px; height: 530px; opacity: 0;">
+          <div class="window-header">
+            <div class="dot dot-red"></div>
+            <div class="dot dot-yellow"></div>
+            <div class="dot dot-green"></div>
+            <div class="window-title mono">Atmospheric Theater — Daft Punk • Instant Crush</div>
+          </div>
+          <div style="width: 100%; height: calc(100% - 38px);">
+            <img src="assets/1920x1080_atmospheric_theater.png" alt="Atmospheric Theater" style="width: 100%; height: 100%; object-fit: cover;" />
+          </div>
+        </div>
+
+        <div id="s4-lyrics" class="glass-card" style="flex: 1; height: 530px; padding: 40px; display: flex; flex-direction: column; justify-content: center; opacity: 0;">
+          <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+            <span class="mono">LRCLIB SYNCED STREAM • OFFSET ±10ms</span>
+            <span class="pill-badge active-indigo" style="font-size: 10px; padding: 2px 8px;">AUTO-SCROLL</span>
+          </div>
+
+          <div class="lyric-line" id="lyric1">I didn't want to be the one to forget</div>
+          <div class="lyric-line active" id="lyric2">I thought about what you said, and I held my head</div>
+          <div class="lyric-line" id="lyric3">And I'd rather take a little hit with you</div>
+          <div class="lyric-line" id="lyric4">Than spend another night all alone with you</div>
+
+          <div style="margin-top: 36px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; gap: 10px;">
+            <span class="pill-badge active-amber" style="font-size: 11px;">1. Audiophile Studio</span>
+            <span class="pill-badge active-indigo" style="font-size: 11px;">2. Atmospheric Theater</span>
+            <span class="pill-badge" style="font-size: 11px; color: #cbd5e1;">3. Modern Curator</span>
+            <span class="pill-badge" style="font-size: 11px; color: #cbd5e1;">4. Minimal Player</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#s4-header", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+      tl.fromTo("#s4-window", { opacity: 0, x: -50, scale: 0.95 }, { opacity: 1, x: 0, scale: 1, duration: 0.7, ease: "expo.out" }, 0.2);
+      tl.fromTo("#s4-lyrics", { opacity: 0, x: 50, scale: 0.95 }, { opacity: 1, x: 0, scale: 1, duration: 0.7, ease: "expo.out" }, 0.3);
+
+      tl.call(() => {
+        document.getElementById("lyric2").className = "lyric-line";
+        document.getElementById("lyric3").className = "lyric-line active";
+      }, null, 1.6);
+
+      tl.call(() => {
+        document.getElementById("lyric3").className = "lyric-line";
+        document.getElementById("lyric4").className = "lyric-line active";
+      }, null, 2.7);
+
+      tl.to("#root", { opacity: 0, filter: "blur(6px)", duration: 0.4, ease: "power2.in" }, 3.6);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene4-lyrics"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

@@ -2,6 +2,14 @@
 
 Local-first desktop and terminal music player: a Rust audio engine driving a modern desktop GUI, an interactive terminal UI, and a scriptable CLI. Audiophile-grade playback, synchronized lyrics, dynamic theming, sandboxed WASM plugins, and a community extension marketplace — no accounts, no telemetry, no cloud streaming lock-in.
 
+<p align="center">
+  <video src="docs/assets/sonora-launch.mp4" poster="docs/assets/sonora-launch-poster.jpg" width="100%" controls autoplay muted loop>
+    <a href="docs/assets/sonora-launch.mp4">
+      <img src="docs/assets/sonora-launch-poster.jpg" alt="Sonora Launch Video" width="100%" />
+    </a>
+  </video>
+</p>
+
 ---
 
 ## 📥 Download

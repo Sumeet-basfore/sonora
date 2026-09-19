@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #090a0f;
+      }
+      #root {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+      .clip {
+        position: absolute;
+        inset: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="20"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div
+        id="scene-hook"
+        class="clip"
+        data-composition-id="scene1-hook"
+        data-composition-src="compositions/scene1-hook.html"
+        data-start="0"
+        data-duration="3.5"
+        data-track-index="0"
+      ></div>
+      <div
+        id="scene-engine"
+        class="clip"
+        data-composition-id="scene2-engine"
+        data-composition-src="compositions/scene2-engine.html"
+        data-start="3.5"
+        data-duration="4.5"
+        data-track-index="1"
+      ></div>
+      <div
+        id="scene-search"
+        class="clip"
+        data-composition-id="scene3-search"
+        data-composition-src="compositions/scene3-search.html"
+        data-start="8.0"
+        data-duration="4.5"
+        data-track-index="2"
+      ></div>
+      <div
+        id="scene-lyrics"
+        class="clip"
+        data-composition-id="scene4-lyrics"
+        data-composition-src="compositions/scene4-lyrics.html"
+        data-start="12.5"
+        data-duration="4.0"
+        data-track-index="3"
+      ></div>
+      <div
+        id="scene-outro"
+        class="clip"
+        data-composition-id="scene5-outro"
+        data-composition-src="compositions/scene5-outro.html"
+        data-start="16.5"
+        data-duration="3.5"
+        data-track-index="4"
+      ></div>
+    </div>
+    <script>
+      const tl = gsap.timeline({ paused: true });
+      tl.to("#root", { duration: 20 }, 0);
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>

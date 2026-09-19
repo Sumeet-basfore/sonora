@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <title>Sonora - Audiophile Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html, body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: #090a0f;
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+        color: #f8fafc;
+        -webkit-font-smoothing: antialiased;
+      }
+      .mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #090a0f;
+      }
+      .bg-grid {
+        position: absolute;
+        inset: 0;
+        background-size: 60px 60px;
+        background-image: 
+          linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+        pointer-events: none;
+      }
+      .ambient-glow-indigo {
+        position: absolute;
+        width: 900px;
+        height: 900px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, rgba(99, 102, 241, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .ambient-glow-amber {
+        position: absolute;
+        width: 700px;
+        height: 700px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(245, 158, 11, 0.18) 0%, rgba(245, 158, 11, 0) 70%);
+        filter: blur(80px);
+        pointer-events: none;
+      }
+      .glass-card {
+        background: rgba(18, 20, 29, 0.85);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+      }
+      .pill-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 18px;
+        border-radius: 9999px;
+        font-size: 14px;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+      }
+      .pill-badge.active-indigo {
+        border-color: rgba(129, 140, 248, 0.5);
+        background: rgba(99, 102, 241, 0.15);
+        color: #a5b4fc;
+      }
+      .pill-badge.active-amber {
+        border-color: rgba(251, 191, 36, 0.5);
+        background: rgba(245, 158, 11, 0.15);
+        color: #fde68a;
+      }
+      .gradient-title {
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .window-frame {
+        position: relative;
+        border-radius: 14px;
+        overflow: hidden;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.9), 0 0 40px rgba(99, 102, 241, 0.2);
+        background: #11131a;
+      }
+      .window-header {
+        height: 38px;
+        background: #161822;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+      }
+      .dot { width: 11px; height: 11px; border-radius: 50%; }
+      .dot-red { background: #ef4444; }
+      .dot-yellow { background: #eab308; }
+      .dot-green { background: #22c55e; }
+      .window-title { margin-left: 12px; font-size: 13px; color: #cbd5e1; font-weight: 500; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="scene2-engine" data-width="1920" data-height="1080">
+      <div class="bg-grid"></div>
+      <div class="ambient-glow-indigo" data-layout-allow-overflow style="top: 100px; left: -100px;"></div>
+      <div class="ambient-glow-amber" data-layout-allow-overflow style="bottom: -100px; right: 100px;"></div>
+
+      <div id="s2-header" style="position: absolute; top: 54px; left: 120px; z-index: 10; opacity: 0;">
+        <div class="pill-badge active-amber" style="margin-bottom: 12px;">
+          BIT-PERFECT DSP CORE
+        </div>
+        <h2 style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em;" class="gradient-title">
+          Dual-Decoder Gapless Engine. Zero Clipping.
+        </h2>
+      </div>
+
+      <div id="s2-window" class="window-frame" style="width: 1400px; height: 750px; margin-top: 80px; opacity: 0;">
+        <div class="window-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="window-title mono">Sonora Audiophile Studio — 384kHz / 32-bit Float</div>
+        </div>
+        <div style="position: relative; width: 100%; height: calc(100% - 38px); overflow: hidden;">
+          <img src="assets/1920x1080_audiophile_studio.png" alt="Audiophile Studio" style="width: 100%; height: 100%; object-fit: cover;" />
+
+          <div id="s2-card1" class="glass-card" style="position: absolute; top: 40px; right: 40px; padding: 20px 24px; width: 380px; z-index: 20; opacity: 0;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span class="pill-badge active-indigo" style="font-size: 11px; padding: 4px 10px;">Symphonia + Rubato</span>
+              <span style="font-size: 13px; color: #10b981; font-weight: 700;" class="mono">BIT-PERFECT</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">64-bit Sinc Resampler</div>
+            <div style="font-size: 13px; color: #cbd5e1; line-height: 1.4;">Gapless buffer handover with 0ms transition jitter and true peak headroom.</div>
+          </div>
+
+          <div id="s2-card2" class="glass-card" style="position: absolute; bottom: 50px; left: 40px; padding: 18px 24px; width: 360px; z-index: 20; opacity: 0;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+              <span class="pill-badge active-amber" style="font-size: 11px; padding: 4px 10px;">EBU R128</span>
+              <span style="font-size: 13px; color: #f59e0b; font-weight: 700;" class="mono">60 FPS DSP</span>
+            </div>
+            <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">Real-Time FFT Analyzer</div>
+            <div style="font-size: 13px; color: #cbd5e1; line-height: 1.4;">64-band logarithmic frequency bins running on dedicated audio thread.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const tl = gsap.timeline({ paused: true });
+
+      tl.fromTo("#s2-header", { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.5, ease: "power3.out" }, 0.1);
+      tl.fromTo("#s2-window", 
+        { opacity: 0, scale: 0.90, y: 50 }, 
+        { opacity: 1, scale: 1, y: 0, duration: 0.8, ease: "expo.out" }, 
+        0.2
+      );
+
+      tl.to("#s2-window", { scale: 1.03, duration: 3.0, ease: "none" }, 1.0);
+
+      tl.fromTo("#s2-card1", { opacity: 0, x: 50 }, { opacity: 1, x: 0, duration: 0.5, ease: "back.out(1.4)" }, 0.7);
+      tl.fromTo("#s2-card2", { opacity: 0, x: -50 }, { opacity: 1, x: 0, duration: 0.5, ease: "back.out(1.4)" }, 1.1);
+
+      tl.to("#root", { opacity: 0, y: -30, duration: 0.4, ease: "power2.in" }, 4.1);
+
+      window.__timelines = window.__timelines || {};
+      window.__timelines["scene2-engine"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
