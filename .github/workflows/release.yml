@@ -88,7 +88,11 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libjavascriptcoregtk-4.1-dev \
             libsoup-3.0-dev \
-            squashfs-tools
+            squashfs-tools \
+            file \
+            patchelf \
+            librsvg2-dev
+          (sudo apt-get install -y libfuse2t64 || sudo apt-get install -y libfuse2 || true)
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -102,16 +106,18 @@ jobs:
           node-version: 22
 
       - name: Build desktop frontend
+        working-directory: apps/desktop
         run: |
-          npm --prefix apps/desktop install
-          npm --prefix apps/desktop run build
+          npm install
+          npm run build
 
       - name: Build Tauri Desktop Packages (AppImage & DEB)
+        working-directory: apps/desktop
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
           NO_STRIP: 1
         run: |
-          npm --prefix apps/desktop run tauri:build -- --bundles appimage,deb
+          npm run tauri:build -- --bundles appimage,deb
 
       - name: Build Terminal Binaries (CLI & TUI)
         run: |
@@ -274,13 +280,15 @@ jobs:
           node-version: 22
 
       - name: Build desktop frontend
+        working-directory: apps/desktop
         run: |
-          npm --prefix apps/desktop install
-          npm --prefix apps/desktop run build
+          npm install
+          npm run build
 
       - name: Build Tauri Desktop Package (DMG)
+        working-directory: apps/desktop
         run: |
-          npm --prefix apps/desktop run tauri:build -- --bundles dmg --target ${{ matrix.target }}
+          npm run tauri:build -- --bundles dmg --target ${{ matrix.target }}
 
       - name: Build Terminal Binaries (CLI & TUI)
         run: |
