@@ -515,7 +515,7 @@ impl Marketplace {
             None => {
                 let mut cands: Vec<&crate::schema::RegistryVersion> =
                     entry.versions().iter().collect();
-                cands.sort_by(|a, b| version_key(&b.version).cmp(&version_key(&a.version)));
+                cands.sort_by_key(|a| std::cmp::Reverse(version_key(&a.version)));
                 cands
                     .into_iter()
                     .find(|_| {
@@ -551,7 +551,7 @@ impl Marketplace {
             return None;
         }
         let mut cands: Vec<&crate::schema::RegistryVersion> = entry.versions().iter().collect();
-        cands.sort_by(|a, b| version_key(&b.version).cmp(&version_key(&a.version)));
+        cands.sort_by_key(|a| std::cmp::Reverse(version_key(&a.version)));
         cands.into_iter().next().map(|t| PickedVersion {
             version: t.version.clone(),
             download_url: t.download_url.clone(),

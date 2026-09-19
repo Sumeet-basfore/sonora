@@ -498,7 +498,7 @@ fn prune_backups(paths: &MarketplacePaths, id: &str) -> Result<()> {
             .unwrap_or(std::time::UNIX_EPOCH);
         versions.push((entry.file_name().to_string_lossy().to_string(), mtime));
     }
-    versions.sort_by(|a, b| b.1.cmp(&a.1));
+    versions.sort_by_key(|a| std::cmp::Reverse(a.1));
     for (name, _) in versions.into_iter().skip(MAX_BACKUPS_PER_ID) {
         let _ = std::fs::remove_dir_all(dir.join(name));
     }
@@ -749,7 +749,7 @@ fn newest_backup(backup_root: &Path) -> Result<Option<String>> {
             candidates.push((entry.file_name().to_string_lossy().to_string(), mtime));
         }
     }
-    candidates.sort_by(|a, b| b.1.cmp(&a.1));
+    candidates.sort_by_key(|a| std::cmp::Reverse(a.1));
     Ok(candidates.into_iter().next().map(|(name, _)| name))
 }
 
