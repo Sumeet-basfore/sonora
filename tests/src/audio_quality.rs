@@ -393,7 +393,10 @@ mod tests {
 
         for (format_name, path, mode) in &test_cases {
             if !path.exists() {
-                println!("  [Skip] Test audio file {:?} not present in environment", path);
+                println!(
+                    "  [Skip] Test audio file {:?} not present in environment",
+                    path
+                );
                 continue;
             }
             println!("\n--------------------------------------------------------");
