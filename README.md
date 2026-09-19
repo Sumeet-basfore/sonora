@@ -1,153 +1,178 @@
 # Sonora
 
-Local-first desktop and terminal music player: a Rust audio engine driving a modern desktop GUI, an interactive terminal UI, and a scriptable CLI. Audiophile-grade playback, synchronized lyrics, dynamic theming, sandboxed WASM plugins, and a community extension marketplace — no accounts, no telemetry, no cloud streaming lock-in.
+<p align="center">
+  <strong>The Sovereign, Bit-Perfect Audiophile Music Player & Instrument</strong>
+</p>
 
 <p align="center">
-  <video src="docs/assets/sonora-launch.mp4" poster="docs/assets/sonora-launch-poster.jpg" width="100%" controls autoplay muted loop>
-    <a href="docs/assets/sonora-launch.mp4">
-      <img src="docs/assets/sonora-launch-poster.jpg" alt="Sonora Launch Video" width="100%" />
-    </a>
-  </video>
+  <a href="https://github.com/Sumeet-basfore/sonora/releases/latest"><img src="https://img.shields.io/github/v/release/Sumeet-basfore/sonora?color=6366f1&label=Release&style=flat-square" alt="Release"></a>
+  <a href="https://github.com/Sumeet-basfore/sonora/actions"><img src="https://img.shields.io/github/actions/workflow/status/Sumeet-basfore/sonora/ci.yml?branch=main&label=CI&style=flat-square" alt="CI Status"></a>
+  <a href="LICENSE-MIT"><img src="https://img.shields.io/badge/License-MIT%20%2F%20Apache--2.0-blue?style=flat-square" alt="License"></a>
+  <a href="https://github.com/Sumeet-basfore/sonora"><img src="https://img.shields.io/badge/Local--First-Zero%20Cloud%20Lock--in-emerald?style=flat-square" alt="Local-First"></a>
+  <a href="https://github.com/Sumeet-basfore/sonora"><img src="https://img.shields.io/badge/Audio%20DSP-384kHz%20%2F%2032--bit%20Float-amber?style=flat-square" alt="Audio DSP"></a>
 </p>
 
 ---
 
-## 📥 Download
+## 🎬 Launch Showcase (20s Video)
 
-Pre-built releases are ready to download and run without compiling or installing developer tools. Compiling Sonora is completely **optional** for normal users.
+https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4
+
+<p align="center">
+  <video src="https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4" poster="docs/assets/sonora-launch-poster.jpg" width="100%" controls autoplay muted loop>
+    <a href="https://github.com/Sumeet-basfore/sonora/raw/main/docs/assets/sonora-launch.mp4">
+      <img src="docs/assets/sonora-launch-preview.gif" alt="Sonora Launch Video Preview" width="100%" />
+    </a>
+  </video>
+</p>
+<p align="center">
+  <em>High-resolution 1080p 60 FPS demo showcasing the Audiophile DSP engine, Universal Command Palette, and Synced Lyrics.</em>
+</p>
+
+---
+
+## 📸 Workspaces & Interface Showcase
+
+Sonora features **4 modular workspaces** designed for different listening contexts — from deep audiophile analysis to immersive theater view.
+
+### 1. Audiophile Studio & Atmospheric Theater
+| **Audiophile Studio** (64-Band Spectrum, 384kHz/32-bit DSP) | **Atmospheric Theater** (Full-Bleed Art & Synced Lyrics) |
+| :---: | :---: |
+| [![Audiophile Studio](docs/assets/screenshot-audiophile-studio.png)](docs/assets/screenshot-audiophile-studio.png) | [![Atmospheric Theater](docs/assets/screenshot-atmospheric-theater.png)](docs/assets/screenshot-atmospheric-theater.png) |
+
+### 2. Modern Curator & Synced Lyrics Engine
+| **Modern Curator** (Rich Library & MusicBrainz Enrichment) | **Synced Lyrics View** (`Cmd + L`, Millisecond Precision) |
+| :---: | :---: |
+| [![Modern Curator](docs/assets/screenshot-modern-curator.png)](docs/assets/screenshot-modern-curator.png) | [![Synced Lyrics](docs/assets/screenshot-lyrics-view.png)](docs/assets/screenshot-lyrics-view.png) |
+
+### 3. Album Detail & Minimal Player
+| **Album Deep Dive** (Multi-Provider Artwork & Tracklists) | **Minimal Player** (Distraction-Free Transport) |
+| :---: | :---: |
+| [![Album Detail](docs/assets/screenshot-album-detail.png)](docs/assets/screenshot-album-detail.png) | [![Minimal Player](docs/assets/screenshot-minimal-player.png)](docs/assets/screenshot-minimal-player.png) |
+
+---
+
+## 🌟 What Makes Sonora Different?
+
+Most modern music players have turned into web wrappers for rental streaming services. **Sonora is built on a single core principle: your music collection is a permanent library, and playing it should feel like operating a precision high-end instrument.**
+
+* **Sovereign & Local-First**: No required user accounts, no telemetry, no remote servers phone-home, no paywalls.
+* **True Bit-Perfect Pipeline**: Dual-decoder gapless engine (Symphonia + Rubato 64-bit sinc resampler) operating at up to 384kHz / 32-bit float.
+* **Decoupled 60 FPS Audio DSP**: Real-time 64-band logarithmic FFT spectrum analyzer running on a dedicated audio thread with lock-free ring buffer IPC (`rtrb`).
+* **Universal Command Palette (`Cmd + K` / `/`)**: Sub-5ms instant local library queries via SQLite FTS5 alongside ranked online metadata matching (MusicBrainz, Cover Art Archive, Fanart.tv).
+* **Millisecond Synced Lyrics (`Cmd + L`)**: Synchronized word/line scrolling with manual `±10ms` offset stepper and LRCLIB integration.
+* **Sandboxed WASM Plugins**: Safe, capability-gated Wasmtime extension runtime. Crashing plugins will never interrupt playback.
+
+---
+
+## 📥 Download Sonora
+
+Pre-built binaries are ready to download and run without compiling or installing developer toolchains.
 
 👉 **[Download Sonora v0.1.0 Releases](https://github.com/Sumeet-basfore/sonora/releases/latest)**
 
-### Desktop Applications
-* **Linux (x86_64)** *(Primary — Fully Tested)*
-  * Universal AppImage: `Sonora-v0.1.0-linux-x86_64.AppImage`
-  * Debian / Ubuntu (.deb): `Sonora-v0.1.0-linux-x86_64.deb`
-* **Windows (x86_64)** *(Best-Effort)*
-  * MSI Installer: `Sonora-v0.1.0-windows-x86_64.msi`
-  * Setup Executable: `Sonora-v0.1.0-windows-x86_64.exe`
-* **macOS** *(Best-Effort)*
-  * Apple Silicon (M1/M2/M3/M4): `Sonora-v0.1.0-macos-aarch64.dmg`
-  * Intel (x86_64): `Sonora-v0.1.0-macos-x86_64.dmg`
+### 🖥️ Desktop Applications
+| Platform | Format | Package / Asset Name | Status |
+| :--- | :--- | :--- | :--- |
+| **Linux (x86_64)** | Universal AppImage | `Sonora-v0.1.0-linux-x86_64.AppImage` | **Primary (Fully Tested)** |
+| **Linux (Debian/Ubuntu)** | DEB Package | `Sonora-v0.1.0-linux-x86_64.deb` | **Primary (Fully Tested)** |
+| **Windows (x86_64)** | MSI Installer | `Sonora-v0.1.0-windows-x86_64.msi` | Supported |
+| **Windows (x86_64)** | Portable Executable | `Sonora-v0.1.0-windows-x86_64.exe` | Supported |
+| **macOS (Apple Silicon)** | DMG (Universal/ARM64) | `Sonora-v0.1.0-macos-aarch64.dmg` | Supported |
+| **macOS (Intel)** | DMG (x86_64) | `Sonora-v0.1.0-macos-x86_64.dmg` | Supported |
 
-### Terminal Tools (`sonora` CLI + `sonora-tui`)
-Standalone bundles containing `sonora`, `sonora-tui`, and `README.txt`:
+### 📟 Terminal Tools (`sonora` CLI + `sonora-tui`)
+Standalone bundles containing `sonora`, `sonora-tui`, and documentation:
 * **Linux (x86_64):** `Sonora-v0.1.0-linux-x86_64-terminal.tar.gz`
 * **Windows (x86_64):** `Sonora-v0.1.0-windows-x86_64-terminal.zip`
 * **macOS (Apple Silicon):** `Sonora-v0.1.0-macos-aarch64-terminal.tar.gz`
 * **macOS (Intel):** `Sonora-v0.1.0-macos-x86_64-terminal.tar.gz`
 
-### Developers
-* **[Build from Source](#-for-developers-build-from-source)** *(Optional)*
-
 ---
 
-## 🚀 Quick Installation
+## 🚀 Quick Start & Installation
 
 ### Linux Desktop GUI
-* **AppImage (Universal):**
-  ```sh
-  chmod +x Sonora-v0.1.0-linux-x86_64.AppImage
-  ./Sonora-v0.1.0-linux-x86_64.AppImage
-  ```
-* **Debian / Ubuntu (.deb):**
-  ```sh
-  sudo dpkg -i Sonora-v0.1.0-linux-x86_64.deb
-  ```
+```bash
+# AppImage (Universal)
+chmod +x Sonora-v0.1.0-linux-x86_64.AppImage
+./Sonora-v0.1.0-linux-x86_64.AppImage
+
+# Debian / Ubuntu (.deb)
+sudo dpkg -i Sonora-v0.1.0-linux-x86_64.deb
+```
 
 ### Linux Terminal Tools
-```sh
+```bash
 tar -xzf Sonora-v0.1.0-linux-x86_64-terminal.tar.gz
-./sonora-tui          # Interactive full-screen terminal player
+./sonora-tui          # Full-screen interactive TUI
 ./sonora status       # Scriptable CLI
 ```
 
-### Windows Desktop GUI
-1. Download `Sonora-v0.1.0-windows-x86_64.msi` or `Sonora-v0.1.0-windows-x86_64.exe`.
-2. Run the installer and launch Sonora from the Start Menu.
+### Windows
+1. Download `Sonora-v0.1.0-windows-x86_64.msi` or `.exe`.
+2. Run the installer and launch Sonora from your Start Menu.
+3. For Terminal tools: extract `Sonora-v0.1.0-windows-x86_64-terminal.zip` and run `.\sonora-tui.exe`.
 
-### Windows Terminal Tools
-1. Download and extract `Sonora-v0.1.0-windows-x86_64-terminal.zip`.
-2. In PowerShell or Command Prompt:
-   ```powershell
-   .\sonora-tui.exe
-   .\sonora.exe status
-   ```
-
-### macOS Desktop GUI
+### macOS
 1. Download `Sonora-v0.1.0-macos-aarch64.dmg` (Apple Silicon) or `Sonora-v0.1.0-macos-x86_64.dmg` (Intel).
-2. Open the `.dmg` and drag `Sonora.app` to **Applications**.
-3. *(Note: Because binaries are not yet notarized by Apple, right-click `Sonora.app` and choose **Open** on first launch).*
+2. Open the `.dmg` and drag `Sonora.app` into **Applications**.
 
-### macOS Terminal Tools
-```sh
-tar -xzf Sonora-v0.1.0-macos-*-terminal.tar.gz
-./sonora-tui
-./sonora status
+### Release Integrity
+Verify downloaded assets against `checksums.txt`:
+```bash
+# Linux / macOS
+sha256sum -c checksums.txt
+
+# Windows PowerShell
+Get-FileHash Sonora-v0.1.0-windows-x86_64.msi -Algorithm SHA256
 ```
 
-### Checksum Verification
-Verify release integrity using `checksums.txt`:
-* **Linux / macOS:**
-  ```sh
-  sha256sum -c checksums.txt
-  ```
-* **Windows (PowerShell):**
-  ```powershell
-  Get-FileHash Sonora-v0.1.0-windows-x86_64.msi -Algorithm SHA256
-  ```
-
-📖 Comprehensive step-by-step setup and PATH instructions: **[docs/INSTALLATION.md](docs/INSTALLATION.md)**
-
 ---
 
-## 🎵 Supported Formats
+## 🎵 Supported Audio Formats
 
-FLAC, ALAC, WAV, AIFF, MP3, AAC/M4A, Ogg Vorbis — decoded with **Symphonia**, tagged with **Lofty**. Corrupted or unreadable files are logged and skipped safely without stopping library scans.
-
-
----
-
-## ✨ Key Features
-
-* **Real-Time Audio Engine** — dedicated audio thread with zero allocation or mutex locking in the CPAL render loop, lock-free ring buffer (`rtrb`), 10-band parametric EQ, and lock-free visualizer taps.
-* **Instant Library Search** — SQLite + FTS5 full-text search index, instant fuzzy search over title, artist, album, and genre, automatic album art caching.
-* **Synchronized Lyrics** — 5 display modes (Classic, Cinematic, Compact, Minimal, Dual-line), live timing synchronization, click-to-seek, manual offset calibration, and local `.lrc` / LRCLIB cascade.
-* **Visualizer Suite** — FFT-based spectrum analysis off the real-time audio thread, frame-rate independent rendering.
-* **Customization & Themes** — semantic color tokens, light/dark modes, customizable accent colors, responsive layout toggles, 5 album art display styles.
-* **Sandboxed WASM Plugins** — capability-gated Wasmtime sandbox with strict memory and system call constraints; crashing plugins never interrupt playback.
-* **Offline-First Marketplace** — Git-backed registry (`community-registry/`) with SHA-256 checksum-verified extensions, rollback, and uninstallation.
+| Format | Extension | Decoder Engine | Metadata Tagging |
+| :--- | :--- | :--- | :--- |
+| **FLAC** | `.flac` | Symphonia (Bit-Perfect Lossless) | Lofty (Vorbis Comments) |
+| **ALAC** | `.m4a`, `.alac` | Symphonia (Apple Lossless) | Lofty (MP4 iTunes Tags) |
+| **WAV / AIFF** | `.wav`, `.aif`, `.aiff` | Symphonia (PCM 16/24/32-bit float) | Lofty (RIFF / ID3v2) |
+| **MP3** | `.mp3` | Symphonia (MPEG Audio Layer III) | Lofty (ID3v1 / ID3v2.4) |
+| **AAC** | `.aac`, `.m4a` | Symphonia (Advanced Audio Coding) | Lofty (MP4 Atoms) |
+| **Ogg Vorbis** | `.ogg` | Symphonia (Vorbis Codec) | Lofty (Vorbis Comments) |
+| **Opus** | `.opus` | Symphonia (Low-Latency Opus) | Lofty (Opus Tags) |
 
 ---
 
 ## 🛠️ For Developers: Build From Source
 
-Building from source is completely optional. If you want to contribute or build locally:
+Building from source is completely optional. If you would like to hack on the audio engine or contribute:
 
 ### Prerequisites
 * Rust stable toolchain (`rustup update stable`)
-* Node.js 20+
-* Linux dependencies: `sudo apt-get install -y libasound2-dev libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev`
+* Node.js 20+ & npm
+* Linux system libraries: `sudo apt-get install -y libasound2-dev libwebkit2gtk-4.1-dev libjavascriptcoregtk-4.1-dev libsoup-3.0-dev`
 
-### Build & Run
-```sh
+### Clone & Build
+```bash
 git clone https://github.com/Sumeet-basfore/sonora.git
 cd sonora
 
-# Build entire workspace (engine, library, lyrics, plugin host, CLI, TUI, desktop)
+# Build entire Rust workspace (audio core, DSP, FTS5 indexer, CLI, TUI, Tauri desktop backend)
 cargo build --workspace
 
-# Build desktop frontend
+# Build modern desktop frontend
 npm --prefix apps/desktop install
 npm --prefix apps/desktop run build
 
-# Run applications
+# Run applications locally
 cargo run -p sonora-cli -- status    # Scriptable CLI
 cargo run -p sonora-tui              # Interactive TUI
 npm --prefix apps/desktop run tauri  # Desktop GUI
 ```
 
-### Running Tests
-```sh
+### Running Test Suite & Quality Checks
+```bash
 cargo fmt --all -- --check
 cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
@@ -156,28 +181,27 @@ npm --prefix apps/desktop test
 
 ---
 
-## 🔌 Plugin & Theme Development
+## 🔌 Plugins, Themes & Extensions
 
-* **Plugin Architecture:** Sandboxed WASM modules implementing the `sonora_plugin_*` ABI. See [`docs/05-plugin-system.md`](docs/05-plugin-system.md) and [`plugins/example/`](plugins/example/).
-* **Theme Development:** Pure JSON token schema + sanitized CSS textures. See [`docs/06-theming-and-customization.md`](docs/06-theming-and-customization.md) and [`themes/sonora-retro/`](themes/sonora-retro/).
-* **Community Registry:** Reproducible package generator and manifest schema. See [`community-registry/`](community-registry/).
+* **WASM Plugins**: Sandboxed WebAssembly modules implementing the `sonora_plugin_*` ABI. See [`docs/05-plugin-system.md`](docs/05-plugin-system.md) and [`plugins/example/`](plugins/example/).
+* **Theme Customization**: Pure JSON token schemas with hot-reloading CSS textures. See [`docs/06-theming-and-customization.md`](docs/06-theming-and-customization.md) and [`themes/sonora-retro/`](themes/sonora-retro/).
+* **Community Registry**: Reproducible manifest format and SHA-256 package registry. See [`community-registry/`](community-registry/).
 
 ---
 
-## 📚 Documentation & Roadmap
+## 📚 Technical Specifications & Documentation
 
 * [System Architecture Specification](docs/04-system-architecture.md)
-* [Plugin System & Sandboxing](docs/05-plugin-system.md)
-* [Theming & Design Tokens](docs/06-theming-and-customization.md)
-* [Lyrics System Specification](docs/07-lyrics-system.md)
-* [Community Marketplace Specification](docs/08-marketplace.md)
-* [Security & Permissions Model](docs/09-security-and-permissions.md)
-* [Development Roadmap](docs/11-development-roadmap.md)
+* [Audio Engine & Real-Time DSP](docs/04-system-architecture.md#audio-engine)
+* [Online Metadata & Enrichment Architecture](docs/23-online-metadata.md)
+* [Universal Search & Keyboard Palette UX](docs/24-online-search-ux.md)
+* [Artwork Retrieval & Multi-Provider Caching](docs/25-artwork-system.md)
+* [Synchronized Lyrics Pipeline](docs/26-lyrics-experience.md)
+* [Deterministic Metadata Matching & Scoring](docs/27-metadata-matching.md)
 * [Architecture Decision Records (ADRs)](docs/12-decision-log.md)
-* [Release Notes](RELEASE_NOTES.md)
 
 ---
 
 ## 📄 License
 
-Dual-licensed under [MIT](LICENSE-MIT) or [Apache-2.0](LICENSE-APACHE).
+Sonora is dual-licensed under [MIT](LICENSE-MIT) and [Apache-2.0](LICENSE-APACHE).
