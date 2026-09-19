@@ -15,7 +15,6 @@ dist-ssr/
 
 # Tauri
 apps/desktop/src-tauri/target/
-apps/desktop/src-tauri/gen/
 
 # IDE / OS
 .DS_Store

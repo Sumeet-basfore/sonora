@@ -202,7 +202,7 @@ jobs:
       - name: Build Tauri Desktop Packages (MSI & NSIS EXE)
         working-directory: apps/desktop
         run: |
-          npm run tauri:build -- --bundles msi,nsis
+          npm run tauri:build -- --bundles msi,nsis --verbose
 
       - name: Build Terminal Binaries (CLI & TUI)
         run: |
