@@ -1,6 +1,6 @@
 import { appState } from './state';
 
-export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
+export function setupKeyboardShortcuts(_focusSearchCallback?: () => void) {
   window.addEventListener('keydown', (e: KeyboardEvent) => {
     // Skip if typing in an input or textarea
     const target = e.target as HTMLElement | null;
@@ -12,6 +12,10 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
 
     if (e.key === 'Escape') {
       window.dispatchEvent(new CustomEvent('sonora-close-settings'));
+      if (appState.isUniversalSearchVisible()) {
+        appState.closeUniversalSearch();
+        return;
+      }
       if (appState.isMatchInspectorVisible()) {
         appState.closeMatchInspector();
         return;
@@ -53,6 +57,12 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
       return;
     }
 
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      appState.openUniversalSearch();
+      return;
+    }
+
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'l') {
       e.preventDefault();
       appState.openLyricsManager();
@@ -61,7 +71,7 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
 
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') {
       e.preventDefault();
-      focusSearchCallback();
+      appState.openUniversalSearch();
       return;
     }
 
@@ -137,7 +147,7 @@ export function setupKeyboardShortcuts(focusSearchCallback: () => void) {
 
       case '/':
         e.preventDefault();
-        focusSearchCallback();
+        appState.openUniversalSearch();
         break;
     }
   });

@@ -1,7 +1,8 @@
 use sonora_common::{init_logging, LogConfig, TrackId};
 use sonora_core::{
     ArtworkCandidate, ArtworkQuery, CachedArtworkAsset, LyricsCandidate, LyricsCandidateQuery,
-    PlaybackStatus, QueueItem, RankedCandidateMatch, SonoraApp, SonoraCommand, SonoraConfig,
+    OnlineArtist, OnlineReleaseGroup, OnlineTrack, PlaybackStatus, QueueItem, RankedCandidateMatch,
+    SonoraApp, SonoraCommand, SonoraConfig,
 };
 use sonora_library::{AlbumDto, ArtistDto, LibrarySummary, ScanStats, SearchResult};
 use std::sync::{Arc, Mutex};
@@ -510,6 +511,42 @@ fn enrichment_export_lrc(
 }
 
 #[tauri::command]
+async fn enrichment_search_tracks(
+    state: State<'_, AppState>,
+    query: String,
+    limit: Option<usize>,
+) -> Result<Vec<OnlineTrack>, String> {
+    let app = get_app(&state)?;
+    app.search_online_tracks(&query, limit.unwrap_or(20))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn enrichment_search_albums(
+    state: State<'_, AppState>,
+    query: String,
+    limit: Option<usize>,
+) -> Result<Vec<OnlineReleaseGroup>, String> {
+    let app = get_app(&state)?;
+    app.search_online_albums(&query, limit.unwrap_or(20))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn enrichment_search_artists(
+    state: State<'_, AppState>,
+    query: String,
+    limit: Option<usize>,
+) -> Result<Vec<OnlineArtist>, String> {
+    let app = get_app(&state)?;
+    app.search_online_artists(&query, limit.unwrap_or(20))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn marketplace_catalog(state: State<AppState>) -> Result<sonora_registry::Catalog, String> {
     let guard = state.app.lock().map_err(|e| e.to_string())?;
     app_of(&guard)?.market_catalog().map_err(|e| e.to_string())
@@ -709,6 +746,9 @@ pub fn run() {
             enrichment_find_lyrics,
             enrichment_apply_lyrics,
             enrichment_export_lrc,
+            enrichment_search_tracks,
+            enrichment_search_albums,
+            enrichment_search_artists,
         ])
         .run(tauri::generate_context!())
         .expect("error while running sonora desktop application");

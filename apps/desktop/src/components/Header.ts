@@ -3,7 +3,6 @@ import { layoutManager } from '../customization';
 
 export class HeaderComponent {
   private container: HTMLElement;
-  private searchDebounceTimer: number | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -97,25 +96,20 @@ export class HeaderComponent {
       window.dispatchEvent(new CustomEvent('sonora-open-settings'));
     });
 
-    searchInput.addEventListener('input', () => {
-      const query = searchInput.value.trim();
-      clearBtn.style.display = query ? 'flex' : 'none';
+    const searchBox = this.container.querySelector('.search-box');
+    searchBox?.addEventListener('click', () => {
+      appState.openUniversalSearch(searchInput.value);
+    });
 
-      if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
-      this.searchDebounceTimer = window.setTimeout(() => {
-        if (query) {
-          appState.setActiveView({ type: 'search', query });
-        } else {
-          appState.setActiveView({ type: 'albums' });
-        }
-      }, 150);
+    searchInput.addEventListener('focus', () => {
+      appState.openUniversalSearch(searchInput.value);
+      searchInput.blur();
     });
 
     clearBtn.addEventListener('click', () => {
       searchInput.value = '';
       clearBtn.style.display = 'none';
       appState.setActiveView({ type: 'albums' });
-      searchInput.focus();
     });
 
     scanBtn.addEventListener('click', () => {
@@ -175,10 +169,6 @@ export class HeaderComponent {
   }
 
   public focusSearch() {
-    const searchInput = this.container.querySelector('.search-input') as HTMLInputElement;
-    if (searchInput) {
-      searchInput.focus();
-      searchInput.select();
-    }
+    appState.openUniversalSearch();
   }
 }

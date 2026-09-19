@@ -32,10 +32,14 @@ export class MatchInspectorComponent {
     }
 
     if (this.currentTrackId !== activeTrack.trackId) {
-      this.currentTrackId = activeTrack.trackId;
+      this.currentTrackId = activeTrack.trackId ?? null;
       this.candidates = [];
       this.selectedIndex = 0;
-      this.loadCandidates(activeTrack.trackId);
+      if (activeTrack.trackId) {
+        this.loadCandidates(activeTrack.trackId);
+      } else {
+        this.render();
+      }
     } else {
       this.render();
     }

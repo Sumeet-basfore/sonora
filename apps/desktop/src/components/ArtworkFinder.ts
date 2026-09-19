@@ -12,10 +12,12 @@ export class ArtworkFinderComponent {
   private activeFilter: string = 'all';
   private targetInfo: {
     targetType: 'album' | 'artist' | 'track';
-    targetId: number;
+    targetId?: number;
     title: string;
     artistName?: string | null;
     mbid?: string | null;
+    releaseMbid?: string | null;
+    releaseGroupMbid?: string | null;
   } | null = null;
 
   constructor(container: HTMLElement) {
@@ -41,7 +43,8 @@ export class ArtworkFinderComponent {
     if (
       !this.targetInfo ||
       this.targetInfo.targetId !== activeTarget.targetId ||
-      this.targetInfo.targetType !== activeTarget.targetType
+      this.targetInfo.targetType !== activeTarget.targetType ||
+      this.targetInfo.title !== activeTarget.title
     ) {
       this.targetInfo = activeTarget;
       this.candidates = [];
@@ -55,10 +58,12 @@ export class ArtworkFinderComponent {
 
   private async loadArtwork(target: {
     targetType: 'album' | 'artist' | 'track';
-    targetId: number;
+    targetId?: number;
     title: string;
     artistName?: string | null;
     mbid?: string | null;
+    releaseMbid?: string | null;
+    releaseGroupMbid?: string | null;
   }) {
     this.isLoading = true;
     this.errorMessage = null;
@@ -68,7 +73,8 @@ export class ArtworkFinderComponent {
     if (target.targetType === 'album') {
       query.album_title = target.title;
       query.artist_name = target.artistName ?? undefined;
-      query.release_mbid = target.mbid ?? undefined;
+      query.release_mbid = (target.releaseMbid || target.mbid) ?? undefined;
+      query.release_group_mbid = target.releaseGroupMbid ?? undefined;
     } else if (target.targetType === 'artist') {
       query.artist_name = target.title;
       query.artist_mbid = target.mbid ?? undefined;
@@ -99,11 +105,13 @@ export class ArtworkFinderComponent {
     this.render();
 
     try {
-      await api.applyArtwork(
-        this.targetInfo.targetType,
-        this.targetInfo.targetId,
-        selected.original_url
-      );
+      if (this.targetInfo.targetId !== undefined) {
+        await api.applyArtwork(
+          this.targetInfo.targetType,
+          this.targetInfo.targetId,
+          selected.original_url
+        );
+      }
       await appState.refresh();
       appState.closeArtworkFinder();
     } catch (err: unknown) {

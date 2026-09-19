@@ -176,6 +176,16 @@ export const api = {
       trackId,
       filePath,
     }),
+
+  // Universal Search (Sonora v0.2 Phase 4)
+  searchOnlineTracks: (query: string, limit?: number) =>
+    invokeTauri<import('./types').OnlineTrack[]>('enrichment_search_tracks', { query, limit }),
+
+  searchOnlineAlbums: (query: string, limit?: number) =>
+    invokeTauri<import('./types').OnlineReleaseGroup[]>('enrichment_search_albums', { query, limit }),
+
+  searchOnlineArtists: (query: string, limit?: number) =>
+    invokeTauri<import('./types').OnlineArtist[]>('enrichment_search_artists', { query, limit }),
 };
 
 // In-memory mock for web preview/development
@@ -523,6 +533,48 @@ async function mockInvoke<T>(cmd: string, args?: Record<string, unknown>): Promi
       return undefined as T;
     case 'enrichment_export_lrc':
       return '/music/get_lucky.lrc' as T;
+    case 'enrichment_search_tracks':
+      return [
+        {
+          recording_mbid: 'rec-mock-001',
+          release_mbid: 'rel-mock-001',
+          release_group_mbid: 'rg-mock-001',
+          position: 8,
+          number: '8',
+          title: 'Get Lucky',
+          duration_ms: 248000,
+          artist_credits: [
+            { artist_mbid: 'art-mock-001', name: 'Daft Punk', join_phrase: ' feat. ' },
+            { artist_mbid: 'art-mock-002', name: 'Pharrell Williams', join_phrase: null },
+          ],
+          isrcs: ['USQX91300108'],
+        },
+      ] as T;
+    case 'enrichment_search_albums':
+      return [
+        {
+          mbid: 'rg-mock-001',
+          title: 'Random Access Memories',
+          primary_type: 'Album',
+          secondary_types: [],
+          first_release_date: '2013-05-17',
+          artist_credits: [
+            { artist_mbid: 'art-mock-001', name: 'Daft Punk', join_phrase: null },
+          ],
+        },
+      ] as T;
+    case 'enrichment_search_artists':
+      return [
+        {
+          mbid: 'art-mock-001',
+          name: 'Daft Punk',
+          sort_name: 'Daft Punk',
+          country: 'FR',
+          disambiguation: 'French electronic music duo',
+          biography: 'Legendary French electronic music duo formed in 1993 in Paris.',
+          external_links: [],
+        },
+      ] as T;
     default:
       return [] as unknown as T;
   }

@@ -851,4 +851,40 @@ impl SonoraApp {
 
         Ok(lrc_path.to_string_lossy().to_string())
     }
+
+    /// Search online tracks via MusicBrainz for Universal Search.
+    pub async fn search_online_tracks(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineTrack>> {
+        self.enrichment
+            .search_online_tracks(query, limit)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
+
+    /// Search online albums/release groups via MusicBrainz for Universal Search.
+    pub async fn search_online_albums(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineReleaseGroup>> {
+        self.enrichment
+            .search_online_albums(query, limit)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
+
+    /// Search online artists via MusicBrainz for Universal Search.
+    pub async fn search_online_artists(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineArtist>> {
+        self.enrichment
+            .search_online_artists(query, limit)
+            .await
+            .map_err(|e| SonoraError::Internal(e.to_string()))
+    }
 }

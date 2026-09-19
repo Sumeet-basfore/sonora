@@ -14,6 +14,7 @@ import { QueueDrawerComponent } from './components/QueueDrawer';
 import { ScanModalComponent } from './components/ScanModal';
 import { SettingsModalComponent } from './components/SettingsModal';
 import { SidebarComponent } from './components/Sidebar';
+import { UniversalSearchComponent } from './components/UniversalSearch';
 import { VisualizerComponent } from './components/Visualizer';
 import {
   themeEngine,
@@ -72,6 +73,9 @@ function initializeApp() {
       <div class="modal-root" id="match-inspector-container"></div>
       <div class="modal-root" id="artwork-finder-container"></div>
       <div class="modal-root" id="lyrics-manager-container"></div>
+
+      <!-- Universal Global Search & Command Palette (Sonora v0.2 Phase 4) -->
+      <div class="modal-root" id="universal-search-container"></div>
     </div>
   `;
 
@@ -89,9 +93,10 @@ function initializeApp() {
   const matchInspectorContainer = document.querySelector('#match-inspector-container') as HTMLElement;
   const artworkFinderContainer = document.querySelector('#artwork-finder-container') as HTMLElement;
   const lyricsManagerContainer = document.querySelector('#lyrics-manager-container') as HTMLElement;
+  const universalSearchContainer = document.querySelector('#universal-search-container') as HTMLElement;
 
   const sidebar = new SidebarComponent(sidebarContainer);
-  const header = new HeaderComponent(headerContainer);
+  new HeaderComponent(headerContainer);
   new LibraryViewComponent(mainContainer);
   new MarketplaceViewComponent(mainContainer);
   new NowPlayingStageComponent(nowPlayingContainer);
@@ -104,10 +109,11 @@ function initializeApp() {
   new MatchInspectorComponent(matchInspectorContainer);
   new ArtworkFinderComponent(artworkFinderContainer);
   new LyricsManagerComponent(lyricsManagerContainer);
+  new UniversalSearchComponent(universalSearchContainer);
 
   // Setup Keyboard Navigation & Global Shortcuts
   setupKeyboardShortcuts(() => {
-    header.focusSearch();
+    appState.openUniversalSearch();
   });
 
   // Global settings open/close events

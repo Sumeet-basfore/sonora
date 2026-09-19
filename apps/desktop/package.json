@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:build": "tauri build",
-    "test": "node --experimental-strip-types --test test/customization.test.ts test/lyrics.test.ts test/marketplace.test.ts test/escape.test.ts test/enrichment.test.ts"
+    "test": "node --experimental-strip-types --test test/customization.test.ts test/lyrics.test.ts test/marketplace.test.ts test/escape.test.ts test/enrichment.test.ts test/universal_search.test.ts"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.0.0"

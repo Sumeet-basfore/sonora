@@ -1,5 +1,5 @@
 import { api } from './api.ts';
-import type { ActiveView, PlaybackStatus, QueueItem } from './types.ts';
+import type { ActiveView, PlaybackStatus, QueueItem, SearchScope } from './types.ts';
 
 type Listener = () => void;
 
@@ -245,7 +245,7 @@ class StateManager {
 
   private isMatchInspectorOpen: boolean = false;
   private activeMatchTrack: {
-    trackId: number;
+    trackId?: number | null;
     title: string;
     artistName?: string | null;
     albumTitle?: string | null;
@@ -262,7 +262,7 @@ class StateManager {
   }
 
   public openMatchInspector(track: {
-    trackId: number;
+    trackId?: number | null;
     title: string;
     artistName?: string | null;
     albumTitle?: string | null;
@@ -283,10 +283,12 @@ class StateManager {
   private isArtworkFinderOpen: boolean = false;
   private activeArtworkTarget: {
     targetType: 'album' | 'artist' | 'track';
-    targetId: number;
+    targetId?: number;
     title: string;
     artistName?: string | null;
     mbid?: string | null;
+    releaseMbid?: string | null;
+    releaseGroupMbid?: string | null;
   } | null = null;
 
   public isArtworkFinderVisible(): boolean {
@@ -299,10 +301,12 @@ class StateManager {
 
   public openArtworkFinder(target: {
     targetType: 'album' | 'artist' | 'track';
-    targetId: number;
+    targetId?: number;
     title: string;
     artistName?: string | null;
     mbid?: string | null;
+    releaseMbid?: string | null;
+    releaseGroupMbid?: string | null;
   }) {
     this.activeArtworkTarget = target;
     this.isArtworkFinderOpen = true;
@@ -360,6 +364,49 @@ class StateManager {
   public closeLyricsManager() {
     this.isLyricsManagerOpen = false;
     this.activeLyricsTrack = null;
+    this.notify();
+  }
+
+  // Universal Search (Sonora v0.2 Phase 4)
+  private isUniversalSearchOpen: boolean = false;
+  private universalSearchScope: SearchScope = 'local';
+  private universalSearchQuery: string = '';
+
+  public isUniversalSearchVisible(): boolean {
+    return this.isUniversalSearchOpen;
+  }
+
+  public getUniversalSearchState() {
+    return {
+      isOpen: this.isUniversalSearchOpen,
+      scope: this.universalSearchScope,
+      query: this.universalSearchQuery,
+    };
+  }
+
+  public openUniversalSearch(initialQuery?: string, initialScope?: SearchScope) {
+    if (initialQuery !== undefined) {
+      this.universalSearchQuery = initialQuery;
+    }
+    if (initialScope !== undefined) {
+      this.universalSearchScope = initialScope;
+    }
+    this.isUniversalSearchOpen = true;
+    this.notify();
+  }
+
+  public closeUniversalSearch() {
+    this.isUniversalSearchOpen = false;
+    this.notify();
+  }
+
+  public setUniversalSearchScope(scope: SearchScope) {
+    this.universalSearchScope = scope;
+    this.notify();
+  }
+
+  public setUniversalSearchQuery(query: string) {
+    this.universalSearchQuery = query;
     this.notify();
   }
 }

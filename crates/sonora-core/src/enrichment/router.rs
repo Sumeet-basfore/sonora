@@ -328,4 +328,37 @@ impl EnrichmentRouter {
         // 3. Process through zero-trust sanitization pipeline
         self.artwork_pipeline.process_and_cache(image_url, &bytes)
     }
+
+    // -----------------------------------------------------------------------
+    // 5. Direct Entity Search (Universal Search)
+    // -----------------------------------------------------------------------
+
+    /// Search for online tracks / recordings via MusicBrainz.
+    pub async fn search_online_tracks(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineTrack>, ProviderError> {
+        self.metadata_provider.search_recordings(query, limit).await
+    }
+
+    /// Search for online release groups / albums via MusicBrainz.
+    pub async fn search_online_albums(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineReleaseGroup>, ProviderError> {
+        self.metadata_provider
+            .search_release_groups(query, limit)
+            .await
+    }
+
+    /// Search for online artists via MusicBrainz.
+    pub async fn search_online_artists(
+        &self,
+        query: &str,
+        limit: usize,
+    ) -> Result<Vec<crate::metadata::models::OnlineArtist>, ProviderError> {
+        self.metadata_provider.search_artists(query, limit).await
+    }
 }

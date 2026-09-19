@@ -355,3 +355,27 @@ export interface LyricsCandidateQuery {
   duration_seconds?: number | null;
 }
 
+// ---------------------------------------------------------------------------
+// Universal Search Types (Sonora v0.2 Phase 4)
+// ---------------------------------------------------------------------------
+
+export type SearchScope = 'local' | 'online_metadata' | 'lyrics';
+
+export interface LocalSearchResults {
+  tracks: SearchResult[];
+  albums: AlbumDto[];
+  artists: ArtistDto[];
+}
+
+export interface OnlineSearchResults {
+  recordings: OnlineTrack[];
+  release_groups: OnlineReleaseGroup[];
+  artists: OnlineArtist[];
+}
+
+export interface UniversalSearchState {
+  isOpen: boolean;
+  scope: SearchScope;
+  query: string;
+}
+
